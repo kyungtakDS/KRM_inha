@@ -1,3 +1,18 @@
+#'---
+#'title: "Qualitative Risk Analysis _ Inha"
+#'author: "Kyungtak Kim"
+#'date: '2020 3 26 '
+#'output:
+#'  html_document:
+#'    keep_md: TRUE
+#'   
+#'    
+#'  
+#'---
+
+
+
+
 # 패키지 설치
 #install.packages("sf")
 #install.packages("tmap")
