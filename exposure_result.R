@@ -17,6 +17,7 @@ library(sf)
 library(tmap)
 Sys.setenv(Language="En")
 library(caret)
+library(knitr)
 
 
 
@@ -108,6 +109,7 @@ DB_s_dif <- DB_s%>%
   arrange(-dif)
 knitr::kable(DB_s_dif[1:10, ])  # 침수구역내 총주택수가 늘어난 시군
 knitr::kable(DB_s_dif[152:161, ])  # 침수구역내 총주택수가 줄어든 시군
+
 
 
 #' lattice test

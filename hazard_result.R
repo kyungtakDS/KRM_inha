@@ -19,6 +19,7 @@ Sys.setenv(Language="En")
 library(caret)
 
 
+
 #' # 원본 데이터 읽기 / 특성 분석
 DB <- read.csv('input/hazard_db.csv')
 head(DB)

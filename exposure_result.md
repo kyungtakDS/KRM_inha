@@ -17,6 +17,7 @@ library(sf)
 library(tmap)
 Sys.setenv(Language="En")
 library(caret)
+library(knitr)
 ```
 
 # 원본 데이터 읽기 / 특성 분석
