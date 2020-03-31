@@ -1,5 +1,5 @@
 #'---
-#'title: "Qualitative Risk Analysis _ Inha"
+#'title: "Exposure - 총주택,총인구,평균공시지가"
 #'author: "Kyungtak Kim"
 #'date: '2020 3 26 '
 #'output:
@@ -11,26 +11,304 @@
 #'---
 
 
-# 패키지 설치
-#install.packages("sf")
-#install.packages("tmap")
-#install.packages("dplyr")
+#+ library, warning=FALSE, message=FALSE
+library(tidyverse)
+library(sf)
+library(tmap)
+Sys.setenv(Language="En")
+library(caret)
 
 
-#원본 데이터 읽기
+
+#' # 원본 데이터 읽기 / 특성 분석
 DB <- read.csv('input/exposure_db.csv')
+head(DB)
 
 
-# Exposure 지표별 log 표준화 함수 설정
+#' ## 총주택수 자료 특성(_ex_str)  
+#' 
+#' 연도별 확률밀도함수
+#' 침수구역내의 주택수에 대한 분포를 보면 0-500채 사이가 가장 높다
+#'  
+
+DB_s<- DB %>% 
+  select(NameK, contains("str"))
+DB_s_p <- DB_s %>%                           # pivoting
+  pivot_longer(c("X16_ex_str", "X17_ex_str"),
+               names_to = "year",
+               values_to = "house")
+DB_s_p %>% 
+  ggplot()+
+  geom_density(aes(x=house, y=..density.., color=year))
+DB_s %>% 
+  ggplot(aes(X16_ex_str))+
+  geom_histogram(bins=200)
+
+
+
+#' outlier를 찾기 boxplot을 년도 별로 그려본다.  
+#' 최대값은 서울의 값이며, 큰 값들의 영향을 조금 줄이는 효과를 보기 위해 
+#' z-score 보다는 min-max scaling(보통 normalizaiton이라고 하고,  
+#' 경우에 따라 standardization이라고도 함)를 사용
+#' 
+DB_s_p %>%
+  ggplot(aes(year, house))+
+  geom_boxplot()
+  
+
+#' 침수구역내 총건축물수 
+#' 
+#+ fig.width=12, fig.height=25
+DB_s_p %>% 
+  group_by(NameK) %>% 
+  mutate(mean=mean(house))%>% 
+  ggplot(aes(x=fct_reorder(NameK, mean),
+             y=house))+
+  geom_boxplot()+
+  coord_flip()
+
+#' 총건축물수가 적은 지역에 대한 분포 비교
+#+ fig.width=12, fig.height=12
+DB_s_p %>% 
+  group_by(NameK) %>% 
+  mutate(mean=mean(house))%>%   
+  filter(mean < 300) %>% 
+  ggplot(aes(x=fct_reorder(NameK, mean),
+             y=house))+
+  geom_boxplot()+
+  coord_flip()
+
+
+#' 총건축물수가 많은 지역에 대한 분포 비교  
+#' 인천광역시의 경우 침수구역내 총주택수가 적다.
+#' 제주특별자치도의 경우 침수구역내 총주택수가 많은 편에 속한다.(소하천때문??)
+#' 인천광역시의 경우 총주택수 (16년 2065 , 17년 2373채, 차이 308채 )
+DB_s_p %>% 
+  group_by(NameK) %>% 
+  mutate(mean=mean(house))%>%   
+  filter(mean > 10000) %>% 
+  ggplot(aes(x=fct_reorder(NameK, mean),
+             y=house))+
+  geom_boxplot()+
+  coord_flip()
+
+
+#' 년도별 침수구역내 총주택수의 변화  
+#' 
+#' **총주택수가 2016년에 비해 2017년에 줄어든 것은 이지역의 재개발**  
+#' **로 이해 단독주택이 아파트로 바뀌어서 여러 객체가 하나의 객체로**  
+#' **인식된 것이 아닌지? check해볼 필요가 있다**  
+#'
+#' 
+DB_s %>% 
+  mutate(dif=(X17_ex_str - X16_ex_str)) %>% 
+  filter(NameK == "인천광역시")
+DB_s_dif <- DB_s%>%
+  mutate(dif=(X17_ex_str - X16_ex_str)) %>% 
+  arrange(-dif)
+knitr::kable(DB_s_dif[1:10, ])  # 침수구역내 총주택수가 늘어난 시군
+knitr::kable(DB_s_dif[152:161, ])  # 침수구역내 총주택수가 줄어든 시군
+
+
+#' lattice test
+regVar <- c("X16_ex_str", "X17_ex_str")
+theme1 <- trellis.par.get()
+theme1$plot.symbol$col = rgb(.2, .2, .2, .4)
+theme1$plot.symbol$pch = 16
+theme1$plot.line$col = rgb(1, 0, 0, .7)
+theme1$plot.line$lwd <- 2
+trellis.par.set(theme1)
+featurePlot(x = DB[, regVar], 
+            y = DB$SGG, 
+            plot = "scatter", 
+            layout = c(2, 1))
+
+
+
+
+#' ## 총인구수 자료 특성(_ex_pop)  
+#' 
+#' 연도별 확률밀도함수
+#' 침수구역내의 인구수에 대한 분포
+#'  
+DB_p <- DB %>% 
+  select(NameK, contains("pop"))
+DB_p_p <- DB_p %>%                           # pivoting
+  pivot_longer(c("X16_ex_pop", "X17_ex_pop"),
+               names_to = "year",
+               values_to = "people")
+DB_p_p %>% 
+  ggplot()+
+  geom_density(aes(x=people, y=..density.., color=year))
+DB_p %>% 
+  ggplot(aes(X17_ex_pop))+
+  geom_histogram(bins=200)
+
+
+
+#' 침수구역내 총인구수 
+#' 
+#+ fig.width=12, fig.height=25
+DB_p_p %>% 
+  group_by(NameK) %>% 
+  mutate(mean=mean(people))%>% 
+  ggplot(aes(x=fct_reorder(NameK, mean),
+             y=people))+
+  geom_boxplot()+
+  coord_flip()
+
+
+#' 총인구수가 적은 지역에 대한 분포 비교
+#+ fig.width=12, fig.height=12
+DB_p_p %>% 
+  group_by(NameK) %>% 
+  mutate(mean=mean(people))%>%   
+  filter(mean < 300) %>% 
+  ggplot(aes(x=fct_reorder(NameK, mean),
+             y=people))+
+  geom_boxplot()+
+  coord_flip()
+
+
+#' 총인구수가 많은 지역에 대한 분포 비교  
+#' 
+DB_p_p %>% 
+  group_by(NameK) %>% 
+  mutate(mean=mean(people))%>%   
+  filter(mean > 100000) %>% 
+  ggplot(aes(x=fct_reorder(NameK, mean),
+             y=people))+
+  geom_boxplot()+
+  coord_flip()
+
+
+#' 침수구역내 총인구수의 변화  
+#' 년도별 침수구역내 총인구수의 변화
+DB_p %>% 
+  mutate(dif=(X17_ex_pop - X16_ex_pop)) %>% 
+  filter(NameK == "서울특별시")
+DB_p_dif <- DB_p%>%
+  mutate(dif=(X17_ex_pop - X16_ex_pop)) %>% 
+  arrange(-dif)
+knitr::kable(DB_p_dif[1:10, ])  # 침수구역내 총인구가 늘어난 시군
+knitr::kable(DB_p_dif[152:161, ])  # 침수구역내 총인구가 줄어든 시군
+
+
+#' lattice test
+regVar <- c("X16_ex_pop", "X17_ex_pop")
+theme1 <- trellis.par.get()
+theme1$plot.symbol$col = rgb(.2, .2, .2, .4)
+theme1$plot.symbol$pch = 16
+theme1$plot.line$col = rgb(1, 0, 0, .7)
+theme1$plot.line$lwd <- 2
+trellis.par.set(theme1)
+featurePlot(x = DB[, regVar], 
+            y = DB$SGG, 
+            plot = "scatter", 
+            layout = c(2, 1))
+
+
+
+#' ## 평균공시지가 자료 특성(_ex_eco)  
+#' 
+#' 연도별 확률밀도함수
+#' 침수구역내의 평균공시지가에 대한 분포
+#'  
+DB_e <- DB %>% 
+  select(NameK, contains("eco"))
+DB_e_p <- DB_e %>%                           # pivoting
+  pivot_longer(c("X16_ex_eco", "X17_ex_eco"),
+               names_to = "year",
+               values_to = "price")
+DB_e_p %>% 
+  ggplot()+
+  geom_density(aes(x=price, y=..density.., color=year))
+DB_e %>% 
+  ggplot(aes(X16_ex_eco))+
+  geom_histogram(bins=200)
+
+
+
+#' 침수구역내 평균공시지가 
+#' 
+#+ fig.width=12, fig.height=25
+DB_e_p %>% 
+  group_by(NameK) %>% 
+  mutate(mean=mean(price))%>% 
+  ggplot(aes(x=fct_reorder(NameK, mean),
+             y=price))+
+  geom_boxplot()+
+  coord_flip()
+
+
+#' 평균공시지가 작은 지역에 대한 분포 비교
+#+ fig.width=12, fig.height=12
+DB_e_p %>% 
+  group_by(NameK) %>% 
+  mutate(mean=mean(price))%>%   
+  filter(mean < 10000) %>%    # 만원
+  ggplot(aes(x=fct_reorder(NameK, mean),
+             y=price))+
+  geom_boxplot()+
+  coord_flip()
+
+
+#' 평균공시지가가 큰 지역에 대한 분포 비교  
+#' 
+DB_e_p %>% 
+  group_by(NameK) %>% 
+  mutate(mean=mean(price))%>%   
+  filter(mean > 500000) %>%   # 50만원
+  ggplot(aes(x=fct_reorder(NameK, mean),
+             y=price))+
+  geom_boxplot()+
+  coord_flip()
+
+
+#' 침수구역내 평균공시지가의 변화  
+#' 년도별 침수구역내 평균공시지가의 변화
+#'   
+#' **check할것-서울, 광명이 타 지역에 비해 너무 크다.?**  
+#' **check할것-인천광역시의 공시지가가 떨어졌는지???**  
+#' 
+#' 
+DB_e %>% 
+  mutate(dif=(X17_ex_eco - X16_ex_eco)) %>% 
+  filter(NameK == "서울특별시")
+DB_e_dif <- DB_p%>%
+  mutate(dif=(X17_ex_pop - X16_ex_pop)) %>% 
+  arrange(-dif)
+knitr::kable(DB_e_dif[1:10, ])  # 침수구역내 평균공시지가가 늘어난 시군
+knitr::kable(DB_e_dif[152:161, ])  # 침수구역내 평균공시지가가 줄어든 시군
+
+
+#' lattice test
+regVar <- c("X16_ex_eco", "X17_ex_eco")
+theme1 <- trellis.par.get()
+theme1$plot.symbol$col = rgb(.2, .2, .2, .4)
+theme1$plot.symbol$pch = 16
+theme1$plot.line$col = rgb(1, 0, 0, .7)
+theme1$plot.line$lwd <- 2
+trellis.par.set(theme1)
+featurePlot(x = DB[, regVar], 
+            y = DB$SGG, 
+            plot = "scatter", 
+            layout = c(2, 1))
+
+
+#' # Exposure 정규화(Normalization Function)함수 - log 정규화
 standard_log <- function(x){
   return((log(x,base=10)-min(log(x,base=10)))/(max(log(x,base=10))-min(log(x,base=10))))
 }
 
 
-# 연도별 데이터 프레임에 log 표준화 적용
+#' # 161개 시군별 변화 Mapping 
+#' 
+# 연도별 데이터 프레임에 정규화 적용
 exposure <- as.data.frame(lapply(DB[,4:9],standard_log))
 exposure <- cbind(DB[,1:3], exposure)
-colnames(exposure)[4:9] <- c("X16_ex_str_log", "X16_ex_pop_log", "X16_ex_eco_log", "X17_ex_str_log", "X17_ex_pop_log", "X17_ex_eco_log")
+colnames(exposure)[4:9] <- c("X16_ex_str_log", "X16_ex_pop_log", "X16_ex_eco_log",
+                             "X17_ex_str_log", "X17_ex_pop_log", "X17_ex_eco_log")
 
 
 # 16년~17년 Exposure 지수 산정
