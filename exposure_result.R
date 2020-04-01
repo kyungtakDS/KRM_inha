@@ -109,6 +109,8 @@ DB_s_dif <- DB_s%>%
   arrange(-dif)
 knitr::kable(DB_s_dif[1:10, ])  # 침수구역내 총주택수가 늘어난 시군
 knitr::kable(DB_s_dif[152:161, ])  # 침수구역내 총주택수가 줄어든 시군
+DB_s_dif[1:10,]
+DB_s_dif[152:161,]
 
 
 
@@ -194,6 +196,10 @@ DB_p_dif <- DB_p%>%
   arrange(-dif)
 knitr::kable(DB_p_dif[1:10, ])  # 침수구역내 총인구가 늘어난 시군
 knitr::kable(DB_p_dif[152:161, ])  # 침수구역내 총인구가 줄어든 시군
+DB_p_dif[1:10,]
+DB_p_dif[152:161,]
+
+
 
 
 #' lattice test
@@ -282,6 +288,8 @@ DB_e_dif <- DB_p%>%
   arrange(-dif)
 knitr::kable(DB_e_dif[1:10, ])  # 침수구역내 평균공시지가가 늘어난 시군
 knitr::kable(DB_e_dif[152:161, ])  # 침수구역내 평균공시지가가 줄어든 시군
+DB_e_dif[1:10,]
+DB_e_dif[152:161,]
 
 
 #' lattice test
@@ -371,6 +379,64 @@ tm_shape(analysis_simp)+
   tm_layout(legend.position = c("right", "bottom"))+
   tm_compass(type = "rose", position = c("right", "top"), size = 2.5)+
   tm_scale_bar(breaks = c(0, 25, 50, 100, 150, 200), position = c("left", "bottom"))
+
+
+
+######################
+library(leaflet)
+library(rgdal)
+library(htmltools)
+#+ fig.width=8, fig.height=6
+a <- st_transform(analysis_simp, 4326)
+pal <- colorBin(
+  palette=c("green", "greenyellow", "yellow", "orange", "red"),
+  domain=NULL,
+  bins = c(0, .2, .4, .6, 0.8, 1),
+  pretty = FALSE)
+
+leaflet(a) %>% 
+  setView(lng = 128, lat = 35.9, zoom = 7) %>% 
+  # base groups
+  addPolygons(color = ~pal(X16_exposure),
+              weight = 1,
+              smoothFactor = 0.5,
+              opacity = 1.0,
+              fillOpacity = 0.5,
+              label = ~htmlEscape(NameK),
+              popup = ~htmlEscape(X16_exposure),
+              highlightOptions = highlightOptions(
+                color = "white", weight = 2,
+                bringToFront = TRUE),
+              group="Exposure 2016") %>% 
+  addPolygons(color = ~pal(X17_exposure),
+              weight = 1,
+              smoothFactor = 0.5,
+              opacity = 1.0,
+              fillOpacity = 0.5,
+              label = ~htmlEscape(NameK),
+              popup = ~htmlEscape(X17_exposure),
+              highlightOptions = highlightOptions(
+                color = "white", weight = 2,
+                bringToFront = TRUE),
+              group="Exposure 2017") %>% 
+  #overlay groups
+  addProviderTiles(providers$Esri.WorldStreetMap,
+                   group="Esri") %>%  
+  addLegend("bottomright", pal = pal, values = ~X17_exposure,
+            title = "Exposure Index",
+            labFormat = labelFormat(digits=10),
+            opacity = 1) %>% 
+  #Layer controls
+  addLayersControl(
+    baseGroups = c("Exposure 2016", "Exposure 2017"),
+    overlayGroups = c("Esri"),
+    options=layersControlOptions(collapsed=FALSE)
+  )
+
+
+#############################
+
+
 
 
 

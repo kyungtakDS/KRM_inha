@@ -124,6 +124,72 @@ tm_shape(analysis_simp)+
   tm_facets(nrow=2)
 
 
+###################
+#' leaflet test
+#' 
+library(leaflet)
+library(rgdal)
+library(htmltools)
+#+ fig.width=8, fig.height=6
+a <- st_transform(analysis_simp, 4326)
+pal <- colorBin(
+  palette=c("green", "greenyellow", "yellow", "orange", "red"),
+  domain=NULL,
+  bins = c(0, .2, .4, .6, 0.8, 1),
+  pretty = FALSE)
+
+leaflet(a) %>% 
+  setView(lng = 128, lat = 35.9, zoom = 7) %>% 
+  # base groups
+  addPolygons(color = ~pal(X16_hazard),
+              weight = 1,
+              smoothFactor = 0.5,
+              opacity = 1.0,
+              fillOpacity = 0.5,
+              label = ~htmlEscape(NameK),
+              popup = ~htmlEscape(X16_hazard),
+              highlightOptions = highlightOptions(
+                color = "white", weight = 2,
+                bringToFront = TRUE),
+              group="Hazard 2016") %>% 
+  addPolygons(color = ~pal(X17_hazard),
+              weight = 1,
+              smoothFactor = 0.5,
+              opacity = 1.0,
+              fillOpacity = 0.5,
+              label = ~htmlEscape(NameK),
+              popup = ~htmlEscape(X17_hazard),
+              highlightOptions = highlightOptions(
+                color = "white", weight = 2,
+                bringToFront = TRUE),
+              group="Hazard 2017") %>%
+  addPolygons(color = ~pal(X18_hazard),
+              weight = 1,
+              smoothFactor = 0.5,
+              opacity = 1.0,
+              fillOpacity = 0.5,
+              label = ~htmlEscape(NameK),
+              popup = ~htmlEscape(X18_hazard),
+              highlightOptions = highlightOptions(
+                color = "white", weight = 2,
+                bringToFront = TRUE),
+              group="Hazard 2018") %>%
+  # overlay groups
+  addProviderTiles(providers$Esri.WorldStreetMap,
+                   group="Esri") %>%  #CartoDB.Positron
+  addLegend("bottomright", pal = pal, values = ~X16_hazard,
+            title = "Hazard Index",
+            labFormat = labelFormat(digits=10),
+            opacity = 1) %>% 
+  #Layer controls
+  addLayersControl(
+    baseGroups = c("Hazard 2016", "Hazard 2017", "Hazard 2018"),
+    overlayGroups = c("Esri"),
+    options=layersControlOptions(collapsed=FALSE)
+  )
+
+
+##############
 
 
 #'# 결과값 저장
