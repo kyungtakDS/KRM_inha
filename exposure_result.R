@@ -2,11 +2,8 @@
 #'title: "Exposure - 총주택,총인구,평균공시지가"
 #'author: "Kyungtak Kim"
 #'date: '2020 3 26 '
-#'output:
-#'  html_document:
-#'    keep_md: TRUE
-#'   
-#'    
+#'output: github_document
+#'  
 #'  
 #'---
 
@@ -18,6 +15,9 @@ library(tmap)
 Sys.setenv(Language="En")
 library(caret)
 library(knitr)
+library(leaflet)
+library(rgdal)
+library(htmltools)
 
 
 
@@ -33,7 +33,7 @@ head(DB)
 #'  
 
 DB_s<- DB %>% 
-  select(NameK, contains("str"))
+  select(NameK, SGG, contains("str"))
 DB_s_p <- DB_s %>%                           # pivoting
   pivot_longer(c("X16_ex_str", "X17_ex_str"),
                names_to = "year",
@@ -113,19 +113,12 @@ DB_s_dif[1:10,]
 DB_s_dif[152:161,]
 
 
-
-#' lattice test
-regVar <- c("X16_ex_str", "X17_ex_str")
-theme1 <- trellis.par.get()
-theme1$plot.symbol$col = rgb(.2, .2, .2, .4)
-theme1$plot.symbol$pch = 16
-theme1$plot.line$col = rgb(1, 0, 0, .7)
-theme1$plot.line$lwd <- 2
-trellis.par.set(theme1)
-featurePlot(x = DB[, regVar], 
-            y = DB$SGG, 
-            plot = "scatter", 
-            layout = c(2, 1))
+DB_s_p %>% 
+  group_by(year) %>% 
+  ggplot(aes(house, SGG))+
+  geom_point(aes(color=factor(SGG)))+
+  facet_grid(. ~year)+
+  theme(legend.position = "none")
 
 
 
@@ -136,7 +129,7 @@ featurePlot(x = DB[, regVar],
 #' 침수구역내의 인구수에 대한 분포
 #'  
 DB_p <- DB %>% 
-  select(NameK, contains("pop"))
+  select(NameK, SGG, contains("pop"))
 DB_p_p <- DB_p %>%                           # pivoting
   pivot_longer(c("X16_ex_pop", "X17_ex_pop"),
                names_to = "year",
@@ -200,20 +193,13 @@ DB_p_dif[1:10,]
 DB_p_dif[152:161,]
 
 
+DB_p_p %>% 
+  group_by(year) %>% 
+  ggplot(aes(people, SGG))+
+  geom_point(aes(color=factor(SGG)))+
+  facet_grid(. ~year)+
+  theme(legend.position = "none")
 
-
-#' lattice test
-regVar <- c("X16_ex_pop", "X17_ex_pop")
-theme1 <- trellis.par.get()
-theme1$plot.symbol$col = rgb(.2, .2, .2, .4)
-theme1$plot.symbol$pch = 16
-theme1$plot.line$col = rgb(1, 0, 0, .7)
-theme1$plot.line$lwd <- 2
-trellis.par.set(theme1)
-featurePlot(x = DB[, regVar], 
-            y = DB$SGG, 
-            plot = "scatter", 
-            layout = c(2, 1))
 
 
 
@@ -223,7 +209,7 @@ featurePlot(x = DB[, regVar],
 #' 침수구역내의 평균공시지가에 대한 분포
 #'  
 DB_e <- DB %>% 
-  select(NameK, contains("eco"))
+  select(NameK, SGG, contains("eco"))
 DB_e_p <- DB_e %>%                           # pivoting
   pivot_longer(c("X16_ex_eco", "X17_ex_eco"),
                names_to = "year",
@@ -292,18 +278,13 @@ DB_e_dif[1:10,]
 DB_e_dif[152:161,]
 
 
-#' lattice test
-regVar <- c("X16_ex_eco", "X17_ex_eco")
-theme1 <- trellis.par.get()
-theme1$plot.symbol$col = rgb(.2, .2, .2, .4)
-theme1$plot.symbol$pch = 16
-theme1$plot.line$col = rgb(1, 0, 0, .7)
-theme1$plot.line$lwd <- 2
-trellis.par.set(theme1)
-featurePlot(x = DB[, regVar], 
-            y = DB$SGG, 
-            plot = "scatter", 
-            layout = c(2, 1))
+
+DB_e_p %>% 
+  group_by(year) %>% 
+  ggplot(aes(price, SGG))+
+  geom_point(aes(color=factor(SGG)))+
+  facet_grid(. ~year)+
+  theme(legend.position = "none")
 
 
 #' # Exposure 정규화(Normalization Function)함수 - log 정규화
@@ -383,9 +364,9 @@ tm_shape(analysis_simp)+
 
 
 ######################
-library(leaflet)
-library(rgdal)
-library(htmltools)
+#library(leaflet)
+#library(rgdal)
+#library(htmltools)
 #+ fig.width=8, fig.height=6
 a <- st_transform(analysis_simp, 4326)
 pal <- colorBin(
@@ -422,14 +403,17 @@ leaflet(a) %>%
   #overlay groups
   addProviderTiles(providers$Esri.WorldStreetMap,
                    group="Esri") %>%  
+  addProviderTiles(providers$CartoDB.Positron,
+                   group="CartoDB") %>%  
   addLegend("bottomright", pal = pal, values = ~X17_exposure,
             title = "Exposure Index",
             labFormat = labelFormat(digits=10),
             opacity = 1) %>% 
+  hideGroup("CartoDB") %>% 
   #Layer controls
   addLayersControl(
     baseGroups = c("Exposure 2016", "Exposure 2017"),
-    overlayGroups = c("Esri"),
+    overlayGroups = c("Esri", "CartoDB"),
     options=layersControlOptions(collapsed=FALSE)
   )
 

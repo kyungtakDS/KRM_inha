@@ -2,11 +2,8 @@
 #'title: "Hazard-확률강우량"
 #'author: "Kyungtak Kim"
 #'date: '2020 3 26 '
-#'output:
-#'  html_document:
-#'    keep_md: TRUE
-#'   
-#'    
+#'output: github_document
+#'      
 #'  
 #'---
 
@@ -24,13 +21,13 @@ library(caret)
 DB <- read.csv('input/hazard_db.csv')
 head(DB)
 
-#' 원 확률강우량 자료(최근 30년간의 자료 이용)에 대한 연도별 확률밀도함수를
-#' 보면.....
+#' ### 확률강우량 자료(최근 30년간의 자료 이용)에 대한 분석  
+#' 연도별 확률밀도함수를 보면.....
 #'  
 DB_h<- DB %>% 
-  select(NameK, contains("pro"))
+  select(NameK, SGG, contains("rain"))
 DB_h_p <- DB_h %>%                           # pivoting
-  pivot_longer(c("X16_ha_pro", "X17_ha_pro", "X18_ha_pro"),
+  pivot_longer(c("X16_ha_rain", "X17_ha_rain", "X18_ha_rain"),
                names_to = "year",
                values_to = "p_rain")
 DB_h_p %>% 
@@ -38,21 +35,14 @@ DB_h_p %>%
   geom_density(aes(x=p_rain, y=..density.., color=year))
 
 
-#' lattice test
 #' SGG는 시군 고유번호로 지역별 대략적인 분포를 알 수 있다.
-#' 
-regVar <- c("X16_ha_pro", "X17_ha_pro", "X18_ha_pro")
-theme1 <- trellis.par.get()
-theme1$plot.symbol$col = rgb(.2, .2, .2, .4)
-theme1$plot.symbol$pch = 16
-theme1$plot.line$col = rgb(1, 0, 0, .7)
-theme1$plot.line$lwd <- 2
-trellis.par.set(theme1)
-featurePlot(x = DB[, regVar], 
-            y = DB$SGG, 
-            plot = "scatter", 
-            layout = c(3, 1))
-
+#'
+DB_h_p %>% 
+  group_by(year) %>% 
+  ggplot(aes(p_rain, SGG))+
+  geom_point(aes(color=factor(SGG)))+
+  facet_grid(. ~year)+
+  theme(legend.position = "none")
 
 
 #' 각 시군별 16-18년사이의 확률강우량의 변화를 보면
@@ -68,7 +58,51 @@ DB_h_p %>%
   coord_flip()
 
 
-#' # 확률강우량 정규화(Normalization Function)함수
+#' ### 우심피해횟수 자료에 대한 분석  
+#' 
+#'   
+DB_h<- DB %>% 
+  select(NameK, SGG, contains("damage"))
+DB_h_p <- DB_h %>%                           # pivoting
+  pivot_longer(c("X16_ha_damage", "X17_ha_damage", "X18_ha_damage"),
+               names_to = "year",
+               values_to = "p_damage")
+DB_h_p %>% 
+  ggplot()+
+  geom_density(aes(x=p_damage, y=..density.., color=year))
+
+DB_h_p %>% 
+  ggplot(aes(p_damage))+
+  geom_histogram(aes(color=factor(SGG)))+
+  facet_grid(.~year)+
+  theme(legend.position = "none")
+
+DB_h_p %>% 
+  group_by(year) %>% 
+  ggplot(aes(p_damage, SGG))+
+  geom_point(aes(color=factor(SGG)))+
+  facet_grid(. ~year)+
+  theme(legend.position = "none")
+
+
+#' 각 시군별 16-18년사이의 확률강우량의 변화를 보면
+#' 충청남도 지역의 일부 지역이 변화가 가장 심하다.
+#' 
+#+ fig.width=12, fig.height=25
+DB_h_p %>% 
+  group_by(NameK) %>% 
+  mutate(mean=mean(p_damage))%>% 
+  ggplot(aes(x=fct_reorder(NameK, mean),
+             y=p_damage))+
+  geom_boxplot()+
+  coord_flip()
+
+
+
+
+#' # 확률강우량 정규화(Normalization Function)함수  
+#' ## [주] 위 우심피해횟수는 일단 사용하지 않는다.
+#' 
 #standard <- function(x){
 #  return((x-min(x))/(max(x)-min(x)))
 #}
@@ -97,7 +131,7 @@ analysis <- st_read("input/analysis.shp")
 #st_is_valid(analysis)
 #library(lwgeom)
 #analysis <- st_make_valid(analysis)
-st_is_valid(analysis)
+#st_is_valid(analysis)
 
 
 # shp파일에 연도별 hazard 지수(표준화 적용) 추가
@@ -177,14 +211,17 @@ leaflet(a) %>%
   # overlay groups
   addProviderTiles(providers$Esri.WorldStreetMap,
                    group="Esri") %>%  #CartoDB.Positron
+  addProviderTiles(providers$CartoDB.Positron,
+                   group="CartoDB") %>%  
   addLegend("bottomright", pal = pal, values = ~X16_hazard,
             title = "Hazard Index",
             labFormat = labelFormat(digits=10),
             opacity = 1) %>% 
+  hideGroup("CartoDB") %>% 
   #Layer controls
   addLayersControl(
     baseGroups = c("Hazard 2016", "Hazard 2017", "Hazard 2018"),
-    overlayGroups = c("Esri"),
+    overlayGroups = c("Esri", "CartoDB"),
     options=layersControlOptions(collapsed=FALSE)
   )
 
