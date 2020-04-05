@@ -19,27 +19,21 @@ library(htmltools)
 
 ``` r
 DB <- read.csv('input/exposure_db.csv')
-head(DB)
+head(DB, 3)
 ```
 
     ##                   Name         NameK   SGG X16_ex_str X16_ex_pop X16_ex_eco
     ## 1 Gangwon Gangneung-si 강원도 강릉시 42150        725       1921    24636.6
     ## 2  Gangwon Goseong-gun 강원도 고성군 42820        247        488    15654.0
     ## 3   Gangwon Donghae-si 강원도 동해시 42170        523       8262    52747.7
-    ## 4  Gangwon Samcheok-si 강원도 삼척시 42230        908       1850    11112.1
-    ## 5    Gangwon Sokcho-si 강원도 속초시 42210        343       3131    77903.5
-    ## 6   Gangwon Yanggu-gun 강원도 양구군 42800       1151       6276    21232.9
     ##   X17_ex_str X17_ex_pop X17_ex_eco
     ## 1        815       3777    26174.5
     ## 2        264        490    16331.1
     ## 3        590       8222    54345.4
-    ## 4       1014       1880    11630.8
-    ## 5        397       3117    81718.8
-    ## 6       1317       6301    21965.7
 
-## 총주택수 자료 특성(\_ex\_str)
-
-연도별 확률밀도함수 침수구역내의 주택수에 대한 분포를 보면 0-500채 사이가 가장 높다
+## 총주택수 자료 특성(\_ex\_str)  
+연도별 확률밀도함수  
+침수구역내의 주택수에 대한 분포를 보면 0-500채 사이가 가장 높다
 
 ``` r
 DB_s<- DB %>% 
@@ -64,8 +58,8 @@ DB_s %>%
 ![](exposure_result_files/figure-gfm/unnamed-chunk-2-2.png)<!-- -->
 
 outlier를 찾기 boxplot을 년도 별로 그려본다.  
-최대값은 서울의 값이며, 큰 값들의 영향을 조금 줄이는 효과를 보기 위해 z-score 보다는 min-max scaling(보통
-normalizaiton이라고 하고,  
+최대값은 서울의 값이며, 큰 값들의 영향을 조금 줄이는 효과를 보기 위해  
+z-score 보다는 min-max scaling(보통 normalizaiton이라고 하고,  
 경우에 따라 standardization이라고도 함)를 사용
 
 ``` r
@@ -106,8 +100,9 @@ DB_s_p %>%
 ![](exposure_result_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
 총건축물수가 많은 지역에 대한 분포 비교  
-인천광역시의 경우 침수구역내 총주택수가 적다. 제주특별자치도의 경우 침수구역내 총주택수가 많은 편에 속한다.(소하천때문??)
-인천광역시의 경우 총주택수 (16년 2065 , 17년 2373채, 차이 308채 )
+인천광역시의 경우 침수구역내 총주택수가 적다.  
+제주특별자치도의 경우 침수구역내 총주택수가 많은 편에 속한다.(소하천때문??) 인천광역시의 경우 총주택수 (16년 2065 ,
+17년 2373채, 차이 308채 )
 
 ``` r
 DB_s_p %>% 
@@ -126,7 +121,7 @@ DB_s_p %>%
 
 **총주택수가 2016년에 비해 2017년에 줄어든 것은 이지역의 재개발**  
 **로 이해 단독주택이 아파트로 바뀌어서 여러 객체가 하나의 객체로**  
-**인식된 것이 아닌지? check해볼 필요가 있다**
+**인식된 것이 아닌지? check해볼 필요가 있다** \#’
 
 ``` r
 DB_s %>% 
@@ -175,38 +170,6 @@ knitr::kable(DB_s_dif[152:161, ])  # 침수구역내 총주택수가 줄어든 �
 | 161 | 서울특별시    | 11000 |       123572 |       121676 | \-1896 |
 
 ``` r
-DB_s_dif[1:10,]
-```
-
-    ##              NameK   SGG X16_ex_str X17_ex_str  dif
-    ## 1       대구광역시 27000      28122      29531 1409
-    ## 2  경상남도 김해시 48250      11082      11875  793
-    ## 3       부산광역시 26000      30457      31226  769
-    ## 4  전라남도 나주시 46170       7148       7891  743
-    ## 5    경기도 안성시 41550       4853       5574  721
-    ## 6  충청남도 부여군 44760       5117       5768  651
-    ## 7  경상북도 영천시 47230       4749       5377  628
-    ## 8  전라북도 전주시 45110       4378       4991  613
-    ## 9  경상남도 창녕군 48740       4529       5128  599
-    ## 10 경상남도 양산시 48330       5061       5650  589
-
-``` r
-DB_s_dif[152:161,]
-```
-
-    ##               NameK   SGG X16_ex_str X17_ex_str   dif
-    ## 152 충청북도 증평군 43745        207         80  -127
-    ## 153 충청북도 청주시 43110        582        447  -135
-    ## 154 충청북도 단양군 43800        234         57  -177
-    ## 155 충청북도 제천시 43150        331        143  -188
-    ## 156 충청북도 괴산군 43760        587        101  -486
-    ## 157 충청북도 옥천군 43730        838        216  -622
-    ## 158 충청북도 영동군 43740       1480        659  -821
-    ## 159 충청북도 음성군 43770       1476        610  -866
-    ## 160 충청북도 충주시 43130       2964       2070  -894
-    ## 161      서울특별시 11000     123572     121676 -1896
-
-``` r
 DB_s_p %>% 
   group_by(year) %>% 
   ggplot(aes(house, SGG))+
@@ -217,9 +180,9 @@ DB_s_p %>%
 
 ![](exposure_result_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
-## 총인구수 자료 특성(\_ex\_pop)
-
-연도별 확률밀도함수 침수구역내의 인구수에 대한 분포
+## 총인구수 자료 특성(\_ex\_pop)  
+연도별 확률밀도함수  
+침수구역내의 인구수에 대한 분포
 
 ``` r
 DB_p <- DB %>% 
@@ -337,38 +300,6 @@ knitr::kable(DB_p_dif[152:161, ])  # 침수구역내 총인구가 줄어든 시�
 | 161 | 경기도 광명시  | 41210 |       183936 |       178982 | \-4954 |
 
 ``` r
-DB_p_dif[1:10,]
-```
-
-    ##              NameK   SGG X16_ex_pop X17_ex_pop  dif
-    ## 1  경상남도 김해시 48250      52492      59241 6749
-    ## 2  경상남도 양산시 48330      78869      85180 6311
-    ## 3    경기도 하남시 41450      42058      47835 5777
-    ## 4    경기도 화성시 41590       9172      14688 5516
-    ## 5  경상북도 경주시 47130      18665      21654 2989
-    ## 6    경기도 김포시 41570      65355      68238 2883
-    ## 7       서울특별시 11000    2232135    2234686 2551
-    ## 8    경기도 고양시 41280     121590     123813 2223
-    ## 9    강원도 강릉시 42150       1921       3777 1856
-    ## 10   경기도 이천시 41500      19559      21316 1757
-
-``` r
-DB_p_dif[152:161,]
-```
-
-    ##               NameK   SGG X16_ex_pop X17_ex_pop   dif
-    ## 152 전라북도 남원시 45190      19618      19284  -334
-    ## 153 충청남도 공주시 44150      10844      10428  -416
-    ## 154 경상남도 거제시 48310      17442      16945  -497
-    ## 155 경상북도 구미시 47190      16953      16429  -524
-    ## 156   경기도 구리시 41310      54580      53934  -646
-    ## 157 전라남도 나주시 46170      16601      15936  -665
-    ## 158      울산광역시 31000     110906     110044  -862
-    ## 159 경상북도 포항시 47110      79047      77208 -1839
-    ## 160      부산광역시 26000     135091     132977 -2114
-    ## 161   경기도 광명시 41210     183936     178982 -4954
-
-``` r
 DB_p_p %>% 
   group_by(year) %>% 
   ggplot(aes(people, SGG))+
@@ -379,9 +310,9 @@ DB_p_p %>%
 
 ![](exposure_result_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
 
-## 평균공시지가 자료 특성(\_ex\_eco)
-
-연도별 확률밀도함수 침수구역내의 평균공시지가에 대한 분포
+## 평균공시지가 자료 특성(\_ex\_eco)  
+연도별 확률밀도함수  
+침수구역내의 평균공시지가에 대한 분포
 
 ``` r
 DB_e <- DB %>% 
@@ -502,38 +433,6 @@ knitr::kable(DB_e_dif[152:161, ])  # 침수구역내 평균공시지가가 줄�
 | 161 | 경기도 광명시  | 41210 |       183936 |       178982 | \-4954 |
 
 ``` r
-DB_e_dif[1:10,]
-```
-
-    ##              NameK   SGG X16_ex_pop X17_ex_pop  dif
-    ## 1  경상남도 김해시 48250      52492      59241 6749
-    ## 2  경상남도 양산시 48330      78869      85180 6311
-    ## 3    경기도 하남시 41450      42058      47835 5777
-    ## 4    경기도 화성시 41590       9172      14688 5516
-    ## 5  경상북도 경주시 47130      18665      21654 2989
-    ## 6    경기도 김포시 41570      65355      68238 2883
-    ## 7       서울특별시 11000    2232135    2234686 2551
-    ## 8    경기도 고양시 41280     121590     123813 2223
-    ## 9    강원도 강릉시 42150       1921       3777 1856
-    ## 10   경기도 이천시 41500      19559      21316 1757
-
-``` r
-DB_e_dif[152:161,]
-```
-
-    ##               NameK   SGG X16_ex_pop X17_ex_pop   dif
-    ## 152 전라북도 남원시 45190      19618      19284  -334
-    ## 153 충청남도 공주시 44150      10844      10428  -416
-    ## 154 경상남도 거제시 48310      17442      16945  -497
-    ## 155 경상북도 구미시 47190      16953      16429  -524
-    ## 156   경기도 구리시 41310      54580      53934  -646
-    ## 157 전라남도 나주시 46170      16601      15936  -665
-    ## 158      울산광역시 31000     110906     110044  -862
-    ## 159 경상북도 포항시 47110      79047      77208 -1839
-    ## 160      부산광역시 26000     135091     132977 -2114
-    ## 161   경기도 광명시 41210     183936     178982 -4954
-
-``` r
 DB_e_p %>% 
   group_by(year) %>% 
   ggplot(aes(price, SGG))+
@@ -556,11 +455,12 @@ standard_log <- function(x){
 
 ``` r
 # 연도별 데이터 프레임에 정규화 적용
-exposure <- as.data.frame(lapply(DB[,4:9],standard_log))
-exposure <- cbind(DB[,1:3], exposure)
+exposure <- as.data.frame(lapply(DB[,4:9],
+                                 standard_log))
+exposure <- cbind(DB[,1:3],
+                  exposure)
 colnames(exposure)[4:9] <- c("X16_ex_str_log", "X16_ex_pop_log", "X16_ex_eco_log",
                              "X17_ex_str_log", "X17_ex_pop_log", "X17_ex_eco_log")
-
 
 # 16년~17년 Exposure 지수 산정
 ex_index_16 <- as.data.frame((rowSums(exposure[,4:6]))/3)
@@ -568,21 +468,158 @@ colnames(ex_index_16) <- c("X16_ex_index")
 ex_index_17 <- as.data.frame((rowSums(exposure[,7:9]))/3)
 colnames(ex_index_17) <- c("X17_ex_index")
 exposure <- cbind(exposure, c(ex_index_16,ex_index_17))
+```
 
+## 년도별 Expsoure 지수를 다시 min-max scaling 적용
 
-# Exposure 지수 표준화 함수 설정
+Exposure 지수 표준화 함수 설정
+
+``` r
 standard <- function(x){
   return((x-min(x))/(max(x)-min(x)))
 }
 
-
 # 연도별 Exposure 지수 표준화 산정
-result <- as.data.frame(lapply(exposure[,10:11],standard))
+result <- as.data.frame(lapply(exposure[,10:11],
+                               standard))
 colnames(result) <- c("X16_exposure", "X17_exposure")
-result <- cbind(DB[,1:3], result)
+result <- cbind(DB[,1:3],
+                result)
+head(result,3)
+```
 
+    ##                   Name         NameK   SGG X16_exposure X17_exposure
+    ## 1 Gangwon Gangneung-si 강원도 강릉시 42150    0.3038772    0.3239064
+    ## 2  Gangwon Goseong-gun 강원도 고성군 42820    0.1938716    0.1884191
+    ## 3   Gangwon Donghae-si 강원도 동해시 42170    0.3807366    0.3786649
 
+## 표준화된 Exposure 지수의 특성 분석
 
+연도별 확률밀도함수  
+\*\* 표준화후에 정규분포에 가깝게 변동을 확인함\*\*
+
+``` r
+result_p <- result %>% 
+  select(-Name)
+result_p_p <- result_p %>%                           # pivoting
+  pivot_longer(c("X16_exposure", "X17_exposure"),
+               names_to = "year",
+               values_to = "exposure")
+result_p_p %>% 
+  ggplot()+
+  geom_density(aes(x=exposure, y=..density.., color=year))
+```
+
+![](exposure_result_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
+
+``` r
+result_p %>% 
+  ggplot(aes(X17_exposure))+
+  geom_histogram(bins=100)
+```
+
+![](exposure_result_files/figure-gfm/unnamed-chunk-21-2.png)<!-- -->
+
+``` r
+result_p_p %>% 
+  group_by(NameK) %>% 
+  mutate(mean=mean(exposure))%>% 
+  ggplot(aes(x=fct_reorder(NameK, mean),
+             y=exposure))+
+  geom_boxplot()+
+  coord_flip()
+```
+
+![](exposure_result_files/figure-gfm/unnamed-chunk-22-1.png)<!-- -->
+
+**연천군의 exposure값이 0 인것은?**
+
+``` r
+result_p_p %>% 
+  group_by(NameK) %>% 
+  mutate(mean=mean(exposure))%>%   
+  filter(mean < 0.25) %>% 
+  ggplot(aes(x=fct_reorder(NameK, mean),
+             y=exposure))+
+  geom_boxplot()+
+  coord_flip()
+```
+
+![](exposure_result_files/figure-gfm/unnamed-chunk-23-1.png)<!-- -->
+
+``` r
+result_p_p %>% 
+  group_by(NameK) %>% 
+  mutate(mean=mean(exposure))%>%   
+  filter(mean > 0.75) %>% 
+  ggplot(aes(x=fct_reorder(NameK, mean),
+             y=exposure))+
+  geom_boxplot()+
+  coord_flip()
+```
+
+![](exposure_result_files/figure-gfm/unnamed-chunk-24-1.png)<!-- -->
+
+``` r
+result_p %>% 
+  mutate(dif=(X17_exposure - X16_exposure)) %>% 
+  filter(NameK == "서울특별시")
+```
+
+    ##        NameK   SGG X16_exposure X17_exposure dif
+    ## 1 서울특별시 11000            1            1   0
+
+``` r
+result_p_dif <- result_p%>%
+  mutate(dif=(X17_exposure - X16_exposure)) %>% 
+  arrange(-dif)
+knitr::kable(result_p_dif[1:10, ])  # 침수구역내 총인구가 늘어난 시군
+```
+
+| NameK    |   SGG | X16\_exposure | X17\_exposure |       dif |
+| :------- | ----: | ------------: | ------------: | --------: |
+| 경상북도 울릉군 | 47940 |     0.1354623 |     0.1755259 | 0.0400637 |
+| 강원도 강릉시  | 42150 |     0.3038772 |     0.3239064 | 0.0200292 |
+| 경기도 화성시  | 41590 |     0.4756605 |     0.4877412 | 0.0120807 |
+| 경기도 하남시  | 41450 |     0.6115047 |     0.6216559 | 0.0101513 |
+| 경상북도 예천군 | 47900 |     0.3120054 |     0.3198377 | 0.0078323 |
+| 경상남도 양산시 | 48330 |     0.6610366 |     0.6677574 | 0.0067208 |
+| 경상남도 김해시 | 48250 |     0.6023870 |     0.6085171 | 0.0061301 |
+| 전라북도 군산시 | 45130 |     0.4057684 |     0.4108655 | 0.0050971 |
+| 경상북도 경산시 | 47290 |     0.4935461 |     0.4986002 | 0.0050542 |
+| 제주특별자치도  | 50000 |     0.6335447 |     0.6382957 | 0.0047510 |
+
+``` r
+knitr::kable(result_p_dif[152:161, ])  # 침수구역내 총인구가 줄어든 시군
+```
+
+|     | NameK    |   SGG | X16\_exposure | X17\_exposure |         dif |
+| --- | :------- | ----: | ------------: | ------------: | ----------: |
+| 152 | 전라남도 영암군 | 46830 |     0.3394898 |     0.3229613 | \-0.0165285 |
+| 153 | 충청북도 청주시 | 43110 |     0.3377649 |     0.3202443 | \-0.0175206 |
+| 154 | 충청북도 충주시 | 43130 |     0.4284770 |     0.4059343 | \-0.0225427 |
+| 155 | 충청북도 영동군 | 43740 |     0.3710808 |     0.3335953 | \-0.0374855 |
+| 156 | 충청북도 음성군 | 43770 |     0.3767064 |     0.3360063 | \-0.0407001 |
+| 157 | 충청북도 제천시 | 43150 |     0.2028809 |     0.1619078 | \-0.0409731 |
+| 158 | 충청북도 증평군 | 43745 |     0.2799180 |     0.2357326 | \-0.0441854 |
+| 159 | 충청북도 옥천군 | 43730 |     0.2697248 |     0.2098595 | \-0.0598653 |
+| 160 | 충청북도 단양군 | 43800 |     0.1837911 |     0.1220382 | \-0.0617529 |
+| 161 | 충청북도 괴산군 | 43760 |     0.2476498 |     0.1725475 | \-0.0751023 |
+
+``` r
+result_p_p %>% 
+  group_by(year) %>% 
+  ggplot(aes(exposure, SGG))+
+  geom_point(aes(color=factor(SGG)))+
+  facet_grid(. ~year)+
+  theme(legend.position = "none")
+```
+
+![](exposure_result_files/figure-gfm/unnamed-chunk-25-1.png)<!-- -->
+
+# Mapping
+
+``` r
 # 시군 shp 파일 불러오기
 library(sf)
 analysis <- st_read("input/analysis.shp")
@@ -646,11 +683,14 @@ tm_shape(analysis_simp)+
               legend.reverse = TRUE)+
   tm_facets(ncol = 2)+
   tm_layout(legend.position = c("right", "bottom"))+
-  tm_compass(type = "rose", position = c("right", "top"), size = 2.5)+
-  tm_scale_bar(breaks = c(0, 25, 50, 100, 150, 200), position = c("left", "bottom"))
+  tm_compass(type = "rose",
+             position = c("right", "top"),
+             size = 2.5)+
+  tm_scale_bar(breaks = c(0, 25, 50, 100, 150, 200),
+               position = c("left", "bottom"))
 ```
 
-![](exposure_result_files/figure-gfm/unnamed-chunk-20-1.png)<!-- -->
+![](exposure_result_files/figure-gfm/unnamed-chunk-27-1.png)<!-- -->
 
 ``` r
 ######################
@@ -677,9 +717,9 @@ leaflet(a) %>%
               fillOpacity = 0.5,
               label = ~htmlEscape(NameK),
               popup = ~htmlEscape(X16_exposure),
-              highlightOptions = highlightOptions(
-                color = "white", weight = 2,
-                bringToFront = TRUE),
+              highlightOptions = highlightOptions(color = "white",
+                                                  weight = 2,
+                                                  bringToFront = TRUE),
               group="Exposure 2016") %>% 
   addPolygons(color = ~pal(X17_exposure),
               weight = 1,
@@ -688,38 +728,37 @@ leaflet(a) %>%
               fillOpacity = 0.5,
               label = ~htmlEscape(NameK),
               popup = ~htmlEscape(X17_exposure),
-              highlightOptions = highlightOptions(
-                color = "white", weight = 2,
-                bringToFront = TRUE),
+              highlightOptions = highlightOptions(color = "white",
+                                                  weight = 2,
+                                                  bringToFront = TRUE),
               group="Exposure 2017") %>% 
   #overlay groups
   addProviderTiles(providers$Esri.WorldStreetMap,
                    group="Esri") %>%  
   addProviderTiles(providers$CartoDB.Positron,
                    group="CartoDB") %>%  
-  addLegend("bottomright", pal = pal, values = ~X17_exposure,
+  addLegend("bottomright",
+            pal = pal,
+            values = ~X17_exposure,
             title = "Exposure Index",
             labFormat = labelFormat(digits=10),
             opacity = 1) %>% 
   hideGroup("CartoDB") %>% 
   #Layer controls
-  addLayersControl(
-    baseGroups = c("Exposure 2016", "Exposure 2017"),
-    overlayGroups = c("Esri", "CartoDB"),
-    options=layersControlOptions(collapsed=FALSE)
-  )
+  addLayersControl(baseGroups = c("Exposure 2016", "Exposure 2017"),
+                   overlayGroups = c("Esri", "CartoDB"),
+                   options=layersControlOptions(collapsed=FALSE))
 ```
 
-![](exposure_result_files/figure-gfm/unnamed-chunk-21-1.png)<!-- -->
+![](exposure_result_files/figure-gfm/unnamed-chunk-28-1.png)<!-- -->
 
 ``` r
 #############################
-
-
-
-
+```
 
 # 결과값 저장
+
+``` r
 write.csv(result, 'output/exposure_result.csv', row.names = F)
 
 

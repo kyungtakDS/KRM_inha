@@ -1,28 +1,199 @@
----
-title: "Qualitative Risk Analysis _ Inha"
-author: "Kyungtak Kim"
-date: '2020 3 26 '
-output:
- html_document:
-   keep_md: TRUE
-  
-   
- 
----
+Capacity-소방/경창관서수밀도, 방재시설개수, 방재예산액
+================
+Kyungtak Kim
+2020 3 26
 
-
-```r
+``` r
 # 패키지 설치
 #install.packages("sf")
 #install.packages("tmap")
 #install.packages("dplyr")
+```
 
+``` r
+library(tidyverse)
+library(sf)
+library(tmap)
+Sys.setenv(Language="En")
+library(caret)
+library(knitr)
+library(leaflet)
+library(rgdal)
+library(htmltools)
+```
 
-#원본 데이터 읽기
+# 원본 데이터 읽기
+
+``` r
 DB <- as.data.frame(read.csv('input/capacity_db.csv'))
+head(DB, 3)
+```
 
+    ##                   Name         NameK   SGG  area_km2 X16_cap_phy X16_fire
+    ## 1 Gangwon Gangneung-si 강원도 강릉시 42150 1046.6571          20        7
+    ## 2  Gangwon Goseong-gun 강원도 고성군 42820  661.4778          12        4
+    ## 3   Gangwon Donghae-si 강원도 동해시 42170  198.1673          11        4
+    ##   X16_police X16_ex_budget X16_main_budget X17_cap_phy X17_fire X17_police
+    ## 1          8      11489640       324127632          27        7          8
+    ## 2          5      24490167       324127632          12        4          5
+    ## 3          7       9816380       324127632          11        4          7
+    ##   X17_ex_budget X17_main_budget X18_cap_phy X18_fire X18_police X18_ex_budget
+    ## 1       6073650       106612695          28        7         12       4698184
+    ## 2      17998079       106612695          12        4          7       8487303
+    ## 3       5047848       106612695          11        5          9       6956954
+    ##   X18_main_budget
+    ## 1        76670945
+    ## 2        76670945
+    ## 3        76670945
 
-# 연도별 소방관서수 밀도 산정
+## 면적에 대한 분석 (area\_km2)
+
+무슨 면적인가? 각 자치단체의 면적…
+
+``` r
+DB_a <- DB %>% 
+  select(NameK, SGG, area_km2)
+head(DB_a, 3)
+```
+
+    ##           NameK   SGG  area_km2
+    ## 1 강원도 강릉시 42150 1046.6571
+    ## 2 강원도 고성군 42820  661.4778
+    ## 3 강원도 동해시 42170  198.1673
+
+``` r
+DB_a %>% 
+  ggplot(aes(x=fct_reorder(NameK, area_km2),
+             y=area_km2))+
+  geom_point(aes(color=factor(SGG)))+
+  coord_flip()+
+  theme(legend.position = "none")
+```
+
+![](capacity_result_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+
+``` r
+DB_a %>% 
+  ggplot(aes(area_km2))+
+  geom_density()
+```
+
+![](capacity_result_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+
+``` r
+DB_a %>% 
+  ggplot(aes(area_km2))+
+  geom_histogram(aes(color=factor(SGG)))+
+  theme(legend.position = "none")
+```
+
+    ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
+
+![](capacity_result_files/figure-gfm/unnamed-chunk-5-2.png)<!-- -->
+
+## 소방관서수에 대한 분석
+
+``` r
+DB_f <- DB %>% 
+  select(NameK, SGG, contains("fire"))
+head(DB_f, 3)
+```
+
+    ##           NameK   SGG X16_fire X17_fire X18_fire
+    ## 1 강원도 강릉시 42150        7        7        7
+    ## 2 강원도 고성군 42820        4        4        4
+    ## 3 강원도 동해시 42170        4        4        5
+
+``` r
+DB_f_p <- DB_f %>%                           # pivoting
+  pivot_longer(c("X16_fire", "X17_fire", "X18_fire"),
+               names_to = "year",
+               values_to = "fire")
+DB_f_p %>% 
+  ggplot()+
+  geom_density(aes(x=fire, y=..density.., color=year))
+```
+
+![](capacity_result_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+
+SGG는 시군 고유번호로 지역별 대략적인 분포를 알 수 있다.
+
+``` r
+DB_f_p %>% 
+  group_by(year) %>% 
+  ggplot(aes(fire, SGG))+
+  geom_point(aes(color=factor(SGG)))+
+  facet_grid(. ~year)+
+  theme(legend.position = "none")
+```
+
+![](capacity_result_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+
+``` r
+DB_f_p %>% 
+  group_by(NameK) %>% 
+  mutate(mean=mean(fire))%>% 
+  ggplot(aes(x=fct_reorder(NameK, mean),
+             y=fire))+
+  geom_boxplot()+
+  coord_flip()
+```
+
+![](capacity_result_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+
+## 경찰관서수에 대한 분석
+
+``` r
+DB_p <- DB %>% 
+  select(NameK, SGG, contains("police"))
+head(DB_p, 3)
+```
+
+    ##           NameK   SGG X16_police X17_police X18_police
+    ## 1 강원도 강릉시 42150          8          8         12
+    ## 2 강원도 고성군 42820          5          5          7
+    ## 3 강원도 동해시 42170          7          7          9
+
+``` r
+DB_p_p <- DB_p %>%                           # pivoting
+  pivot_longer(c("X16_police", "X17_police", "X18_police"),
+               names_to = "year",
+               values_to = "police")
+DB_p_p %>% 
+  ggplot()+
+  geom_density(aes(x=police, y=..density.., color=year))
+```
+
+![](capacity_result_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+
+SGG는 시군 고유번호로 지역별 대략적인 분포를 알 수 있다.
+
+``` r
+DB_p_p %>% 
+  group_by(year) %>% 
+  ggplot(aes(police, SGG))+
+  geom_point(aes(color=factor(SGG)))+
+  facet_grid(. ~year)+
+  theme(legend.position = "none")
+```
+
+![](capacity_result_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+
+``` r
+DB_p_p %>% 
+  group_by(NameK) %>% 
+  mutate(mean=mean(police))%>% 
+  ggplot(aes(x=fct_reorder(NameK, mean),
+             y=police))+
+  geom_boxplot()+
+  coord_flip()
+```
+
+![](capacity_result_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+
+# 연도별 (소방관서수+경찰서수) 밀도 산정
+
+``` r
 result_s1 <- as.data.frame(matrix(nrow = 0, ncol = 1))
 result_s2 <- as.data.frame(matrix(nrow = 0, ncol = 1))
 result_s3 <- as.data.frame(matrix(nrow = 0, ncol = 1))
@@ -36,8 +207,64 @@ for(i in 1:161){
 }
 result_soc <-cbind(result_s1, result_s2, result_s3)
 colnames(result_soc) <- c("X16_cap_soc","X17_cap_soc","X18_cap_soc")
+head(result_soc,3)
+```
 
+    ##   X16_cap_soc X17_cap_soc X18_cap_soc
+    ## 1  0.01433134  0.01433134  0.01815303
+    ## 2  0.01360590  0.01360590  0.01662943
+    ## 3  0.05550865  0.05550865  0.07064737
 
+## (소방관서수+경찰관서수)밀도에 대한 분석
+
+``` r
+result_soc1 <- cbind(DB[,2:3], result_soc) 
+head(result_soc1, 3)
+```
+
+    ##           NameK   SGG X16_cap_soc X17_cap_soc X18_cap_soc
+    ## 1 강원도 강릉시 42150  0.01433134  0.01433134  0.01815303
+    ## 2 강원도 고성군 42820  0.01360590  0.01360590  0.01662943
+    ## 3 강원도 동해시 42170  0.05550865  0.05550865  0.07064737
+
+``` r
+result_soc1_p <- result_soc1 %>%                           # pivoting
+  pivot_longer(c("X16_cap_soc", "X17_cap_soc", "X18_cap_soc"),
+               names_to = "year",
+               values_to = "fp_density")
+result_soc1_p %>% 
+  ggplot()+
+  geom_density(aes(x=fp_density, y=..density.., color=year))
+```
+
+![](capacity_result_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+
+SGG는 시군 고유번호로 지역별 대략적인 분포를 알 수 있다.
+
+``` r
+result_soc1_p %>% 
+  group_by(year) %>% 
+  ggplot(aes(fp_density, SGG))+
+  geom_point(aes(color=factor(SGG)))+
+  facet_grid(. ~year)+
+  theme(legend.position = "none")
+```
+
+![](capacity_result_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
+
+``` r
+result_soc1_p %>% 
+  group_by(NameK) %>% 
+  mutate(mean=mean(fp_density))%>% 
+  ggplot(aes(x=fct_reorder(NameK, mean),
+             y=fp_density))+
+  geom_boxplot()+
+  coord_flip()
+```
+
+![](capacity_result_files/figure-gfm/unnamed-chunk-15-1.png)<!-- -->
+
+``` r
 # 연도별 방재예산액 산정
 DB_eco <- as.data.frame(substr(DB$SGG,1,2))
 colnames(DB_eco) <- c("code")
@@ -110,27 +337,17 @@ result_final <- cbind(DB[,1:3], result_final)
 
 # 시군 shp 파일 불러오기
 library(sf)
-```
-
-```
-## Linking to GEOS 3.6.1, GDAL 2.2.3, PROJ 4.9.3
-```
-
-```r
 analysis <- st_read("input/analysis.shp")
 ```
 
-```
-## Reading layer `analysis' from data source `C:\00_R\0_Git\KRM_inha\input\analysis.shp' using driver `ESRI Shapefile'
-## Simple feature collection with 161 features and 3 fields
-## geometry type:  MULTIPOLYGON
-## dimension:      XY
-## bbox:           xmin: 746109.3 ymin: 1458771 xmax: 1387956 ymax: 2068444
-## epsg (SRID):    NA
-## proj4string:    +proj=tmerc +lat_0=38 +lon_0=127.5 +k=0.9996 +x_0=1000000 +y_0=2000000 +ellps=GRS80 +units=m +no_defs
-```
+    ## Reading layer `analysis' from data source `C:\00_R\0_Git\KRM_inha\input\analysis.shp' using driver `ESRI Shapefile'
+    ## Simple feature collection with 161 features and 3 fields
+    ## geometry type:  MULTIPOLYGON
+    ## dimension:      XY
+    ## bbox:           xmin: 746109.3 ymin: 1458771 xmax: 1387956 ymax: 2068444
+    ## proj4string:    +proj=tmerc +lat_0=38 +lon_0=127.5 +k=0.9996 +x_0=1000000 +y_0=2000000 +ellps=GRS80 +units=m +no_defs
 
-```r
+``` r
 # 폴리곤 에러 체크(기존 shp 파일을 에러 수정한 파일로 변경하였음)
 #st_is_valid(analysis)
 #library(lwgeom)
@@ -138,77 +355,40 @@ analysis <- st_read("input/analysis.shp")
 st_is_valid(analysis)
 ```
 
-```
-##   [1] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE
-##  [16] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE
-##  [31] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE
-##  [46] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE
-##  [61] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE
-##  [76] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE
-##  [91] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE
-## [106] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE
-## [121] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE
-## [136] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE
-## [151] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE
-```
+    ##   [1] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE
+    ##  [16] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE
+    ##  [31] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE
+    ##  [46] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE
+    ##  [61] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE
+    ##  [76] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE
+    ##  [91] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE
+    ## [106] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE
+    ## [121] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE
+    ## [136] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE
+    ## [151] TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE TRUE
 
-```r
+``` r
 # shp파일에 연도별 Capacity 지수(표준화 적용) 추가
 library(dplyr)
-```
-
-```
-## Warning: package 'dplyr' was built under R version 3.6.3
-```
-
-```
-## 
-## Attaching package: 'dplyr'
-```
-
-```
-## The following objects are masked from 'package:stats':
-## 
-##     filter, lag
-```
-
-```
-## The following objects are masked from 'package:base':
-## 
-##     intersect, setdiff, setequal, union
-```
-
-```r
 analysis <- right_join(analysis, result_final[,3:6])
 ```
 
-```
-## Joining, by = "SGG"
-```
+    ## Joining, by = "SGG"
 
-```r
+``` r
 # 폴리곤 단순화
 library(tmap)
-```
-
-```
-## Warning: package 'tmap' was built under R version 3.6.3
-```
-
-```r
 analysis_simp <- st_simplify(analysis, dTolerance = 50)
 ```
 
-```r
+``` r
 # 결과 확인
 tmap_mode("plot")
 ```
 
-```
-## tmap mode set to plotting
-```
+    ## tmap mode set to plotting
 
-```r
+``` r
 breaks = c(0, 0.2, 0.4, 0.6, 0.8, 1)
 facets=c("X16_capacity", "X17_capacity", "X18_capacity")
 tm_shape(analysis_simp)+
@@ -222,9 +402,9 @@ tm_shape(analysis_simp)+
   tm_scale_bar(breaks = c(0, 25, 50, 100, 150, 200), position = c("left", "bottom"))
 ```
 
-![](capacity_result_files/figure-html/unnamed-chunk-2-1.png)<!-- -->
+![](capacity_result_files/figure-gfm/unnamed-chunk-16-1.png)<!-- -->
 
-```r
+``` r
 # 결과값 저장
 write.csv(result_final,'output/capacity_result.csv', row.names = F)
 
@@ -269,11 +449,3 @@ write.csv(result_final,'output/capacity_result.csv', row.names = F)
 # X17_capacity : 17년도 Capacity 지수(표준화 적용)
 # X18_capacity : 18년도 Capacity 지수(표준화 적용)
 ```
-
-
----
-title: "capacity_result.R"
-author: "Kyungtak Kim"
-date: "2020-03-26"
----
-

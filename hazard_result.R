@@ -16,12 +16,12 @@ Sys.setenv(Language="En")
 library(caret)
 
 
-
-#' # 원본 데이터 읽기 / 특성 분석
+#' # 원본 데이터 읽기 / 특성 분석  
+#' 
 DB <- read.csv('input/hazard_db.csv')
-head(DB)
+head(DB, 3)
 
-#' ### 확률강우량 자료(최근 30년간의 자료 이용)에 대한 분석  
+#' ## 확률강우량 자료(최근 30년간의 자료 이용)에 대한 분석  
 #' 연도별 확률밀도함수를 보면.....
 #'  
 DB_h<- DB %>% 
@@ -33,8 +33,6 @@ DB_h_p <- DB_h %>%                           # pivoting
 DB_h_p %>% 
   ggplot()+
   geom_density(aes(x=p_rain, y=..density.., color=year))
-
-
 #' SGG는 시군 고유번호로 지역별 대략적인 분포를 알 수 있다.
 #'
 DB_h_p %>% 
@@ -43,8 +41,6 @@ DB_h_p %>%
   geom_point(aes(color=factor(SGG)))+
   facet_grid(. ~year)+
   theme(legend.position = "none")
-
-
 #' 각 시군별 16-18년사이의 확률강우량의 변화를 보면
 #' 충청남도 지역의 일부 지역이 변화가 가장 심하다.
 #' 
@@ -58,9 +54,8 @@ DB_h_p %>%
   coord_flip()
 
 
-#' ### 우심피해횟수 자료에 대한 분석  
-#' 
-#'   
+#' ## 우심피해횟수 자료에 대한 분석  
+#'    
 DB_h<- DB %>% 
   select(NameK, SGG, contains("damage"))
 DB_h_p <- DB_h %>%                           # pivoting
@@ -70,21 +65,17 @@ DB_h_p <- DB_h %>%                           # pivoting
 DB_h_p %>% 
   ggplot()+
   geom_density(aes(x=p_damage, y=..density.., color=year))
-
 DB_h_p %>% 
   ggplot(aes(p_damage))+
   geom_histogram(aes(color=factor(SGG)))+
   facet_grid(.~year)+
   theme(legend.position = "none")
-
 DB_h_p %>% 
   group_by(year) %>% 
   ggplot(aes(p_damage, SGG))+
   geom_point(aes(color=factor(SGG)))+
   facet_grid(. ~year)+
   theme(legend.position = "none")
-
-
 #' 각 시군별 16-18년사이의 확률강우량의 변화를 보면
 #' 충청남도 지역의 일부 지역이 변화가 가장 심하다.
 #' 
@@ -98,34 +89,22 @@ DB_h_p %>%
   coord_flip()
 
 
-
-
 #' # 확률강우량 정규화(Normalization Function)함수  
-#' ## [주] 위 우심피해횟수는 일단 사용하지 않는다.
+#' ## [주] 위 우심피해횟수는 일단 사용하지 않는다.  
 #' 
-#standard <- function(x){
-#  return((x-min(x))/(max(x)-min(x)))
-#}
+standard <- function(x){
+  return((x-min(x))/(max(x)-min(x)))
+}
 
 #' # 161개 시군별 변화 Mapping 
 #' 
 # 연도별 데이터 프레임에 정규화 적용
-#result <- as.data.frame(lapply(DB[,4:6],standard))
-#colnames(result) <- c("X16_hazard", "X17_hazard", "X18_hazard")
-#result <- cbind(DB[,1:3], result)
-
-
-library(caret)  
-pre <- preProcess(DB[,4:6], method=c("range"))  #Min-max scaling
-pred <- predict(pre, DB[,4:6])
-colnames(pred) <- c("X16_hazard", "X17_hazard", "X18_hazard")
-result <- cbind(DB[,1:3], pred)
-
-
+result <- as.data.frame(lapply(DB[,4:6],standard))
+colnames(result) <- c("X16_hazard", "X17_hazard", "X18_hazard")
+result <- cbind(DB[,1:3], result)
 
 # 시군 shp 파일 불러오기
 analysis <- st_read("input/analysis.shp")
-
 
 # 폴리곤 에러 체크(기본 파일을 에러 수정한 파일로 변경하였음)
 #st_is_valid(analysis)
@@ -133,14 +112,11 @@ analysis <- st_read("input/analysis.shp")
 #analysis <- st_make_valid(analysis)
 #st_is_valid(analysis)
 
-
 # shp파일에 연도별 hazard 지수(표준화 적용) 추가
 analysis <- right_join(analysis, result[,3:6])
 
-
 # 폴리곤 단순화
 analysis_simp <- st_simplify(analysis, dTolerance = 50)
-
 
 #+ fig.width=12, fig.height=12
 # 결과 확인
@@ -153,10 +129,12 @@ tm_shape(analysis_simp)+
               palette = c("green", "greenyellow", "yellow", "orange", "red"),
               legend.reverse = TRUE)+
   tm_layout(legend.position = c("right", "bottom"))+
-  tm_compass(type = "rose", position = c("right", "top"), size = 1.5)+
-  tm_scale_bar(breaks = c(0, 25, 50, 100, 150, 200), position = c("left", "bottom"))+
+  tm_compass(type = "rose",
+             position = c("right", "top"),
+             size = 1.5)+
+  tm_scale_bar(breaks = c(0, 25, 50, 100, 150, 200),
+               position = c("left", "bottom"))+
   tm_facets(nrow=2)
-
 
 ###################
 #' leaflet test
@@ -166,11 +144,10 @@ library(rgdal)
 library(htmltools)
 #+ fig.width=8, fig.height=6
 a <- st_transform(analysis_simp, 4326)
-pal <- colorBin(
-  palette=c("green", "greenyellow", "yellow", "orange", "red"),
-  domain=NULL,
-  bins = c(0, .2, .4, .6, 0.8, 1),
-  pretty = FALSE)
+pal <- colorBin(palette=c("green", "greenyellow", "yellow", "orange", "red"),
+                domain=NULL,
+                bins = c(0, .2, .4, .6, 0.8, 1),
+                pretty = FALSE)
 
 leaflet(a) %>% 
   setView(lng = 128, lat = 35.9, zoom = 7) %>% 
@@ -182,9 +159,9 @@ leaflet(a) %>%
               fillOpacity = 0.5,
               label = ~htmlEscape(NameK),
               popup = ~htmlEscape(X16_hazard),
-              highlightOptions = highlightOptions(
-                color = "white", weight = 2,
-                bringToFront = TRUE),
+              highlightOptions = highlightOptions(color = "white",
+                                                  weight = 2,
+                                                  bringToFront = TRUE),
               group="Hazard 2016") %>% 
   addPolygons(color = ~pal(X17_hazard),
               weight = 1,
@@ -193,9 +170,9 @@ leaflet(a) %>%
               fillOpacity = 0.5,
               label = ~htmlEscape(NameK),
               popup = ~htmlEscape(X17_hazard),
-              highlightOptions = highlightOptions(
-                color = "white", weight = 2,
-                bringToFront = TRUE),
+              highlightOptions = highlightOptions(color = "white",
+                                                  weight = 2,
+                                                  bringToFront = TRUE),
               group="Hazard 2017") %>%
   addPolygons(color = ~pal(X18_hazard),
               weight = 1,
@@ -204,34 +181,31 @@ leaflet(a) %>%
               fillOpacity = 0.5,
               label = ~htmlEscape(NameK),
               popup = ~htmlEscape(X18_hazard),
-              highlightOptions = highlightOptions(
-                color = "white", weight = 2,
-                bringToFront = TRUE),
+              highlightOptions = highlightOptions(color = "white",
+                                                  weight = 2,
+                                                  bringToFront = TRUE),
               group="Hazard 2018") %>%
   # overlay groups
   addProviderTiles(providers$Esri.WorldStreetMap,
                    group="Esri") %>%  #CartoDB.Positron
   addProviderTiles(providers$CartoDB.Positron,
                    group="CartoDB") %>%  
-  addLegend("bottomright", pal = pal, values = ~X16_hazard,
+  addLegend("bottomright",
+            pal = pal,
+            values = ~X16_hazard,
             title = "Hazard Index",
             labFormat = labelFormat(digits=10),
             opacity = 1) %>% 
   hideGroup("CartoDB") %>% 
   #Layer controls
-  addLayersControl(
-    baseGroups = c("Hazard 2016", "Hazard 2017", "Hazard 2018"),
-    overlayGroups = c("Esri", "CartoDB"),
-    options=layersControlOptions(collapsed=FALSE)
-  )
-
+  addLayersControl(baseGroups = c("Hazard 2016", "Hazard 2017", "Hazard 2018"),
+                   overlayGroups = c("Esri", "CartoDB"),
+                   options=layersControlOptions(collapsed=FALSE))
 
 ##############
-
-
-#'# 결과값 저장
+#'# 결과값 저장  
+#'
 write.csv(result, 'output/hazard_result.csv', row.names = F)
-
 
 # 열 명칭별 의미
 
@@ -244,6 +218,3 @@ write.csv(result, 'output/hazard_result.csv', row.names = F)
 # X16_hazard : 16년도 hazard 지수(표준화 적용)
 # X17_hazard : 17년도 hazard 지수(표준화 적용)
 # X18_hazard : 18년도 hazard 지수(표준화 적용)
-
-
-

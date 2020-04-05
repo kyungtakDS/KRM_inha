@@ -1,12 +1,9 @@
 #'---
-#'title: "Qualitative Risk Analysis _ Inha"
+#'title: "Capacity-소방/경창관서수밀도, 방재시설개수, 방재예산액"
 #'author: "Kyungtak Kim"
 #'date: '2020 3 26 '
-#'output:
-#'  html_document:
-#'    keep_md: TRUE
-#'   
-#'    
+#'output: github_document
+#'
 #'  
 #'---
 
@@ -15,12 +12,118 @@
 #install.packages("tmap")
 #install.packages("dplyr")
 
+#+ library, warning=FALSE, message=FALSE
+library(tidyverse)
+library(sf)
+library(tmap)
+Sys.setenv(Language="En")
+library(caret)
+library(knitr)
+library(leaflet)
+library(rgdal)
+library(htmltools)
 
-#원본 데이터 읽기
+
+#' # 원본 데이터 읽기  
+#' 
 DB <- as.data.frame(read.csv('input/capacity_db.csv'))
+head(DB, 3)
 
 
-# 연도별 소방관서수 밀도 산정
+#' ## 면적에 대한 분석  (area_km2)  
+#' 무슨 면적인가? 각 자치단체의 면적...
+#'  
+DB_a <- DB %>% 
+  select(NameK, SGG, area_km2)
+head(DB_a, 3)
+
+#'  
+#+ fig.width=12, fig.height=25
+DB_a %>% 
+  ggplot(aes(x=fct_reorder(NameK, area_km2),
+             y=area_km2))+
+  geom_point(aes(color=factor(SGG)))+
+  coord_flip()+
+  theme(legend.position = "none")
+
+#+ fig.width=6, fig.height=6 
+DB_a %>% 
+  ggplot(aes(area_km2))+
+  geom_density()
+DB_a %>% 
+  ggplot(aes(area_km2))+
+  geom_histogram(aes(color=factor(SGG)))+
+  theme(legend.position = "none")
+
+
+#' ## 소방관서수에 대한 분석  
+#' 
+DB_f <- DB %>% 
+  select(NameK, SGG, contains("fire"))
+head(DB_f, 3)
+DB_f_p <- DB_f %>%                           # pivoting
+  pivot_longer(c("X16_fire", "X17_fire", "X18_fire"),
+               names_to = "year",
+               values_to = "fire")
+DB_f_p %>% 
+  ggplot()+
+  geom_density(aes(x=fire, y=..density.., color=year))
+
+#' SGG는 시군 고유번호로 지역별 대략적인 분포를 알 수 있다.  
+#' 
+DB_f_p %>% 
+  group_by(year) %>% 
+  ggplot(aes(fire, SGG))+
+  geom_point(aes(color=factor(SGG)))+
+  facet_grid(. ~year)+
+  theme(legend.position = "none")
+
+#'  
+#+ fig.width=12, fig.height=25
+DB_f_p %>% 
+  group_by(NameK) %>% 
+  mutate(mean=mean(fire))%>% 
+  ggplot(aes(x=fct_reorder(NameK, mean),
+             y=fire))+
+  geom_boxplot()+
+  coord_flip()
+
+
+#' ## 경찰관서수에 대한 분석  
+#'  
+DB_p <- DB %>% 
+  select(NameK, SGG, contains("police"))
+head(DB_p, 3)
+DB_p_p <- DB_p %>%                           # pivoting
+  pivot_longer(c("X16_police", "X17_police", "X18_police"),
+               names_to = "year",
+               values_to = "police")
+DB_p_p %>% 
+  ggplot()+
+  geom_density(aes(x=police, y=..density.., color=year))
+
+
+#' SGG는 시군 고유번호로 지역별 대략적인 분포를 알 수 있다.  
+#' 
+DB_p_p %>% 
+  group_by(year) %>% 
+  ggplot(aes(police, SGG))+
+  geom_point(aes(color=factor(SGG)))+
+  facet_grid(. ~year)+
+  theme(legend.position = "none")
+
+#'  
+#+ fig.width=12, fig.height=25
+DB_p_p %>% 
+  group_by(NameK) %>% 
+  mutate(mean=mean(police))%>% 
+  ggplot(aes(x=fct_reorder(NameK, mean),
+             y=police))+
+  geom_boxplot()+
+  coord_flip()
+
+#' # 연도별 (소방관서수+경찰서수) 밀도 산정  
+#'  
 result_s1 <- as.data.frame(matrix(nrow = 0, ncol = 1))
 result_s2 <- as.data.frame(matrix(nrow = 0, ncol = 1))
 result_s3 <- as.data.frame(matrix(nrow = 0, ncol = 1))
@@ -34,6 +137,45 @@ for(i in 1:161){
 }
 result_soc <-cbind(result_s1, result_s2, result_s3)
 colnames(result_soc) <- c("X16_cap_soc","X17_cap_soc","X18_cap_soc")
+head(result_soc,3)
+
+
+#' ## (소방관서수+경찰관서수)밀도에 대한 분석  
+#' 
+result_soc1 <- cbind(DB[,2:3], result_soc) 
+head(result_soc1, 3)
+result_soc1_p <- result_soc1 %>%                           # pivoting
+  pivot_longer(c("X16_cap_soc", "X17_cap_soc", "X18_cap_soc"),
+               names_to = "year",
+               values_to = "fp_density")
+result_soc1_p %>% 
+  ggplot()+
+  geom_density(aes(x=fp_density, y=..density.., color=year))
+
+
+#' SGG는 시군 고유번호로 지역별 대략적인 분포를 알 수 있다.  
+#' 
+result_soc1_p %>% 
+  group_by(year) %>% 
+  ggplot(aes(fp_density, SGG))+
+  geom_point(aes(color=factor(SGG)))+
+  facet_grid(. ~year)+
+  theme(legend.position = "none")
+
+#'  
+#+ fig.width=12, fig.height=25
+result_soc1_p %>% 
+  group_by(NameK) %>% 
+  mutate(mean=mean(fp_density))%>% 
+  ggplot(aes(x=fct_reorder(NameK, mean),
+             y=fp_density))+
+  geom_boxplot()+
+  coord_flip()
+
+
+
+
+
 
 
 # 연도별 방재예산액 산정

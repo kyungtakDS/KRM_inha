@@ -29,3 +29,21 @@ featurePlot(x = DB[, regVar],
             plot = "scatter", 
             layout = c(2, 1))
 
+
+
+
+library(caret)  
+pre <- preProcess(DB[,4:6], method=c("range"))  #Min-max scaling
+pred <- predict(pre, DB[,4:6])
+colnames(pred) <- c("X16_hazard", "X17_hazard", "X18_hazard")
+result <- cbind(DB[,1:3], pred)
+
+
+
+DB_e_dif[1:10,]
+DB_e_dif[152:161,]
+
+
+
+
+

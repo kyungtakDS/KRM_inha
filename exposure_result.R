@@ -7,7 +7,6 @@
 #'  
 #'---
 
-
 #+ library, warning=FALSE, message=FALSE
 library(tidyverse)
 library(sf)
@@ -20,18 +19,16 @@ library(rgdal)
 library(htmltools)
 
 
-
-#' # 원본 데이터 읽기 / 특성 분석
+#' # 원본 데이터 읽기 / 특성 분석  
+#' 
 DB <- read.csv('input/exposure_db.csv')
-head(DB)
+head(DB, 3)
 
 
 #' ## 총주택수 자료 특성(_ex_str)  
+#' 연도별 확률밀도함수  
+#' 침수구역내의 주택수에 대한 분포를 보면 0-500채 사이가 가장 높다  
 #' 
-#' 연도별 확률밀도함수
-#' 침수구역내의 주택수에 대한 분포를 보면 0-500채 사이가 가장 높다
-#'  
-
 DB_s<- DB %>% 
   select(NameK, SGG, contains("str"))
 DB_s_p <- DB_s %>%                           # pivoting
@@ -45,19 +42,16 @@ DB_s %>%
   ggplot(aes(X16_ex_str))+
   geom_histogram(bins=200)
 
-
-
 #' outlier를 찾기 boxplot을 년도 별로 그려본다.  
-#' 최대값은 서울의 값이며, 큰 값들의 영향을 조금 줄이는 효과를 보기 위해 
+#' 최대값은 서울의 값이며, 큰 값들의 영향을 조금 줄이는 효과를 보기 위해  
 #' z-score 보다는 min-max scaling(보통 normalizaiton이라고 하고,  
-#' 경우에 따라 standardization이라고도 함)를 사용
+#' 경우에 따라 standardization이라고도 함)를 사용  
 #' 
 DB_s_p %>%
   ggplot(aes(year, house))+
   geom_boxplot()
-  
 
-#' 침수구역내 총건축물수 
+#' 침수구역내 총건축물수  
 #' 
 #+ fig.width=12, fig.height=25
 DB_s_p %>% 
@@ -68,8 +62,9 @@ DB_s_p %>%
   geom_boxplot()+
   coord_flip()
 
-#' 총건축물수가 적은 지역에 대한 분포 비교
-#+ fig.width=12, fig.height=12
+#' 총건축물수가 적은 지역에 대한 분포 비교  
+#' 
+#+ fig.width=6, fig.height=6
 DB_s_p %>% 
   group_by(NameK) %>% 
   mutate(mean=mean(house))%>%   
@@ -79,11 +74,11 @@ DB_s_p %>%
   geom_boxplot()+
   coord_flip()
 
-
 #' 총건축물수가 많은 지역에 대한 분포 비교  
-#' 인천광역시의 경우 침수구역내 총주택수가 적다.
+#' 인천광역시의 경우 침수구역내 총주택수가 적다.  
 #' 제주특별자치도의 경우 침수구역내 총주택수가 많은 편에 속한다.(소하천때문??)
 #' 인천광역시의 경우 총주택수 (16년 2065 , 17년 2373채, 차이 308채 )
+#' 
 DB_s_p %>% 
   group_by(NameK) %>% 
   mutate(mean=mean(house))%>%   
@@ -93,13 +88,11 @@ DB_s_p %>%
   geom_boxplot()+
   coord_flip()
 
-
 #' 년도별 침수구역내 총주택수의 변화  
 #' 
 #' **총주택수가 2016년에 비해 2017년에 줄어든 것은 이지역의 재개발**  
 #' **로 이해 단독주택이 아파트로 바뀌어서 여러 객체가 하나의 객체로**  
-#' **인식된 것이 아닌지? check해볼 필요가 있다**  
-#'
+#' **인식된 것이 아닌지? check해볼 필요가 있다**  #'
 #' 
 DB_s %>% 
   mutate(dif=(X17_ex_str - X16_ex_str)) %>% 
@@ -109,9 +102,6 @@ DB_s_dif <- DB_s%>%
   arrange(-dif)
 knitr::kable(DB_s_dif[1:10, ])  # 침수구역내 총주택수가 늘어난 시군
 knitr::kable(DB_s_dif[152:161, ])  # 침수구역내 총주택수가 줄어든 시군
-DB_s_dif[1:10,]
-DB_s_dif[152:161,]
-
 
 DB_s_p %>% 
   group_by(year) %>% 
@@ -121,12 +111,9 @@ DB_s_p %>%
   theme(legend.position = "none")
 
 
-
-
 #' ## 총인구수 자료 특성(_ex_pop)  
-#' 
-#' 연도별 확률밀도함수
-#' 침수구역내의 인구수에 대한 분포
+#' 연도별 확률밀도함수  
+#' 침수구역내의 인구수에 대한 분포  
 #'  
 DB_p <- DB %>% 
   select(NameK, SGG, contains("pop"))
@@ -141,8 +128,6 @@ DB_p %>%
   ggplot(aes(X17_ex_pop))+
   geom_histogram(bins=200)
 
-
-
 #' 침수구역내 총인구수 
 #' 
 #+ fig.width=12, fig.height=25
@@ -154,9 +139,9 @@ DB_p_p %>%
   geom_boxplot()+
   coord_flip()
 
-
-#' 총인구수가 적은 지역에 대한 분포 비교
-#+ fig.width=12, fig.height=12
+#' 총인구수가 적은 지역에 대한 분포 비교  
+#' 
+#+  fig.width=6, fig.height=6
 DB_p_p %>% 
   group_by(NameK) %>% 
   mutate(mean=mean(people))%>%   
@@ -165,7 +150,6 @@ DB_p_p %>%
              y=people))+
   geom_boxplot()+
   coord_flip()
-
 
 #' 총인구수가 많은 지역에 대한 분포 비교  
 #' 
@@ -178,9 +162,9 @@ DB_p_p %>%
   geom_boxplot()+
   coord_flip()
 
-
 #' 침수구역내 총인구수의 변화  
 #' 년도별 침수구역내 총인구수의 변화
+#' 
 DB_p %>% 
   mutate(dif=(X17_ex_pop - X16_ex_pop)) %>% 
   filter(NameK == "서울특별시")
@@ -189,9 +173,6 @@ DB_p_dif <- DB_p%>%
   arrange(-dif)
 knitr::kable(DB_p_dif[1:10, ])  # 침수구역내 총인구가 늘어난 시군
 knitr::kable(DB_p_dif[152:161, ])  # 침수구역내 총인구가 줄어든 시군
-DB_p_dif[1:10,]
-DB_p_dif[152:161,]
-
 
 DB_p_p %>% 
   group_by(year) %>% 
@@ -201,12 +182,9 @@ DB_p_p %>%
   theme(legend.position = "none")
 
 
-
-
 #' ## 평균공시지가 자료 특성(_ex_eco)  
-#' 
-#' 연도별 확률밀도함수
-#' 침수구역내의 평균공시지가에 대한 분포
+#' 연도별 확률밀도함수  
+#' 침수구역내의 평균공시지가에 대한 분포  
 #'  
 DB_e <- DB %>% 
   select(NameK, SGG, contains("eco"))
@@ -221,8 +199,6 @@ DB_e %>%
   ggplot(aes(X16_ex_eco))+
   geom_histogram(bins=200)
 
-
-
 #' 침수구역내 평균공시지가 
 #' 
 #+ fig.width=12, fig.height=25
@@ -234,9 +210,9 @@ DB_e_p %>%
   geom_boxplot()+
   coord_flip()
 
-
 #' 평균공시지가 작은 지역에 대한 분포 비교
-#+ fig.width=12, fig.height=12
+#' 
+#+ fig.width=6, fig.height=6
 DB_e_p %>% 
   group_by(NameK) %>% 
   mutate(mean=mean(price))%>%   
@@ -245,7 +221,6 @@ DB_e_p %>%
              y=price))+
   geom_boxplot()+
   coord_flip()
-
 
 #' 평균공시지가가 큰 지역에 대한 분포 비교  
 #' 
@@ -258,13 +233,11 @@ DB_e_p %>%
   geom_boxplot()+
   coord_flip()
 
-
 #' 침수구역내 평균공시지가의 변화  
-#' 년도별 침수구역내 평균공시지가의 변화
+#' 년도별 침수구역내 평균공시지가의 변화  
 #'   
 #' **check할것-서울, 광명이 타 지역에 비해 너무 크다.?**  
 #' **check할것-인천광역시의 공시지가가 떨어졌는지???**  
-#' 
 #' 
 DB_e %>% 
   mutate(dif=(X17_ex_eco - X16_ex_eco)) %>% 
@@ -274,10 +247,6 @@ DB_e_dif <- DB_p%>%
   arrange(-dif)
 knitr::kable(DB_e_dif[1:10, ])  # 침수구역내 평균공시지가가 늘어난 시군
 knitr::kable(DB_e_dif[152:161, ])  # 침수구역내 평균공시지가가 줄어든 시군
-DB_e_dif[1:10,]
-DB_e_dif[152:161,]
-
-
 
 DB_e_p %>% 
   group_by(year) %>% 
@@ -287,20 +256,22 @@ DB_e_p %>%
   theme(legend.position = "none")
 
 
-#' # Exposure 정규화(Normalization Function)함수 - log 정규화
+#' # Exposure 정규화(Normalization Function)함수 - log 정규화  
+#' 
 standard_log <- function(x){
   return((log(x,base=10)-min(log(x,base=10)))/(max(log(x,base=10))-min(log(x,base=10))))
 }
 
 
-#' # 161개 시군별 변화 Mapping 
-#' 
+#' # 161개 시군별 변화 Mapping  
+#'  
 # 연도별 데이터 프레임에 정규화 적용
-exposure <- as.data.frame(lapply(DB[,4:9],standard_log))
-exposure <- cbind(DB[,1:3], exposure)
+exposure <- as.data.frame(lapply(DB[,4:9],
+                                 standard_log))
+exposure <- cbind(DB[,1:3],
+                  exposure)
 colnames(exposure)[4:9] <- c("X16_ex_str_log", "X16_ex_pop_log", "X16_ex_eco_log",
                              "X17_ex_str_log", "X17_ex_pop_log", "X17_ex_eco_log")
-
 
 # 16년~17년 Exposure 지수 산정
 ex_index_16 <- as.data.frame((rowSums(exposure[,4:6]))/3)
@@ -310,23 +281,91 @@ colnames(ex_index_17) <- c("X17_ex_index")
 exposure <- cbind(exposure, c(ex_index_16,ex_index_17))
 
 
-# Exposure 지수 표준화 함수 설정
+#' ## 년도별 Expsoure 지수를 다시 min-max scaling 적용  
+#' Exposure 지수 표준화 함수 설정
+#' 
 standard <- function(x){
   return((x-min(x))/(max(x)-min(x)))
 }
 
-
 # 연도별 Exposure 지수 표준화 산정
-result <- as.data.frame(lapply(exposure[,10:11],standard))
+result <- as.data.frame(lapply(exposure[,10:11],
+                               standard))
 colnames(result) <- c("X16_exposure", "X17_exposure")
-result <- cbind(DB[,1:3], result)
+result <- cbind(DB[,1:3],
+                result)
+head(result,3)
+
+#' ## 표준화된 Exposure 지수의 특성 분석    
+#' 연도별 확률밀도함수  
+#' ** 표준화후에 정규분포에 가깝게 변동을 확인함**     
+#'   
+result_p_p <- result %>%                           # pivoting
+  pivot_longer(c("X16_exposure", "X17_exposure"),
+               names_to = "year",
+               values_to = "exposure")
+result_p_p %>% 
+  ggplot()+
+  geom_density(aes(x=exposure, y=..density.., color=year))
+result %>% 
+  ggplot(aes(X17_exposure))+
+  geom_histogram(bins=100)
+
+#' 
+#+ fig.width=12, fig.height=25
+result_p_p %>% 
+  group_by(NameK) %>% 
+  mutate(mean=mean(exposure))%>% 
+  ggplot(aes(x=fct_reorder(NameK, mean),
+             y=exposure))+
+  geom_boxplot()+
+  coord_flip()
+
+#'  **연천군의 exposure값이 0 인것은?**  
+#' 
+#+  fig.width=6, fig.height=6
+result_p_p %>% 
+  group_by(NameK) %>% 
+  mutate(mean=mean(exposure))%>%   
+  filter(mean < 0.25) %>% 
+  ggplot(aes(x=fct_reorder(NameK, mean),
+             y=exposure))+
+  geom_boxplot()+
+  coord_flip()
+
+#' 
+result_p_p %>% 
+  group_by(NameK) %>% 
+  mutate(mean=mean(exposure))%>%   
+  filter(mean > 0.75) %>% 
+  ggplot(aes(x=fct_reorder(NameK, mean),
+             y=exposure))+
+  geom_boxplot()+
+  coord_flip()
+
+#' 
+result %>% 
+  mutate(dif=(X17_exposure - X16_exposure)) %>% 
+  filter(NameK == "서울특별시")
+result_p_dif <- result%>%
+  mutate(dif=(X17_exposure - X16_exposure)) %>% 
+  arrange(-dif)
+knitr::kable(result_p_dif[1:10, ])  # 침수구역내 총인구가 늘어난 시군
+knitr::kable(result_p_dif[152:161, ])  # 침수구역내 총인구가 줄어든 시군
+
+result_p_p %>% 
+  group_by(year) %>% 
+  ggplot(aes(exposure, SGG))+
+  geom_point(aes(color=factor(SGG)))+
+  facet_grid(. ~year)+
+  theme(legend.position = "none")
 
 
-
+#' # Mapping  
+#' 
 # 시군 shp 파일 불러오기
 library(sf)
 analysis <- st_read("input/analysis.shp")
-
 
 # 폴리곤 에러 체크(기본 파일을 에러 수정한 파일로 변경하였음)
 #st_is_valid(analysis)
@@ -334,17 +373,13 @@ analysis <- st_read("input/analysis.shp")
 #analysis <- st_make_valid(analysis)
 st_is_valid(analysis)
 
-
 # shp파일에 연도별 Exposure 지수(표준화 적용) 추가
 library(dplyr)
 analysis <- right_join(analysis, result[,3:5])
 
-
 # 폴리곤 단순화
 library(tmap)
 analysis_simp <- st_simplify(analysis, dTolerance = 50)
-
-
 
 #+ fig.width=12, fig.height=6
 # 결과 확인
@@ -358,10 +393,11 @@ tm_shape(analysis_simp)+
               legend.reverse = TRUE)+
   tm_facets(ncol = 2)+
   tm_layout(legend.position = c("right", "bottom"))+
-  tm_compass(type = "rose", position = c("right", "top"), size = 2.5)+
-  tm_scale_bar(breaks = c(0, 25, 50, 100, 150, 200), position = c("left", "bottom"))
-
-
+  tm_compass(type = "rose",
+             position = c("right", "top"),
+             size = 2.5)+
+  tm_scale_bar(breaks = c(0, 25, 50, 100, 150, 200),
+               position = c("left", "bottom"))
 
 ######################
 #library(leaflet)
@@ -385,9 +421,9 @@ leaflet(a) %>%
               fillOpacity = 0.5,
               label = ~htmlEscape(NameK),
               popup = ~htmlEscape(X16_exposure),
-              highlightOptions = highlightOptions(
-                color = "white", weight = 2,
-                bringToFront = TRUE),
+              highlightOptions = highlightOptions(color = "white",
+                                                  weight = 2,
+                                                  bringToFront = TRUE),
               group="Exposure 2016") %>% 
   addPolygons(color = ~pal(X17_exposure),
               weight = 1,
@@ -396,35 +432,30 @@ leaflet(a) %>%
               fillOpacity = 0.5,
               label = ~htmlEscape(NameK),
               popup = ~htmlEscape(X17_exposure),
-              highlightOptions = highlightOptions(
-                color = "white", weight = 2,
-                bringToFront = TRUE),
+              highlightOptions = highlightOptions(color = "white",
+                                                  weight = 2,
+                                                  bringToFront = TRUE),
               group="Exposure 2017") %>% 
   #overlay groups
   addProviderTiles(providers$Esri.WorldStreetMap,
                    group="Esri") %>%  
   addProviderTiles(providers$CartoDB.Positron,
                    group="CartoDB") %>%  
-  addLegend("bottomright", pal = pal, values = ~X17_exposure,
+  addLegend("bottomright",
+            pal = pal,
+            values = ~X17_exposure,
             title = "Exposure Index",
             labFormat = labelFormat(digits=10),
             opacity = 1) %>% 
   hideGroup("CartoDB") %>% 
   #Layer controls
-  addLayersControl(
-    baseGroups = c("Exposure 2016", "Exposure 2017"),
-    overlayGroups = c("Esri", "CartoDB"),
-    options=layersControlOptions(collapsed=FALSE)
-  )
-
+  addLayersControl(baseGroups = c("Exposure 2016", "Exposure 2017"),
+                   overlayGroups = c("Esri", "CartoDB"),
+                   options=layersControlOptions(collapsed=FALSE))
 
 #############################
-
-
-
-
-
-# 결과값 저장
+#' # 결과값 저장  
+#' 
 write.csv(result, 'output/exposure_result.csv', row.names = F)
 
 
@@ -449,7 +480,3 @@ write.csv(result, 'output/exposure_result.csv', row.names = F)
 # X17_ex_index : 17년도 Exposure 지수
 # X16_exposure : 16년도 Exposure 지수(표준화 적용)
 # X17_exposure : 17년도 Exposure 지수(표준화 적용)
-
-
-
-
