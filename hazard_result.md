@@ -9,6 +9,11 @@ library(sf)
 library(tmap)
 Sys.setenv(Language="En")
 library(caret)
+library(leaflet)
+library(rgdal)
+library(htmltools)
+#install.packages("ggpubr")
+library(ggpubr)
 ```
 
 # 원본 데이터 읽기 / 특성 분석
@@ -72,6 +77,58 @@ DB_h_p %>%
 
 ![](hazard_result_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
+정규성(Normality test)  
+\*\* shapiro-wilk normality test\*\*  
+\*\* p-value가 모두 0.05 보다 크게 나오므로 정규분포를 따른다고 볼 수 있다\*\*
+
+``` r
+ggqqplot(DB$X16_ha_rain)
+```
+
+![](hazard_result_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+
+``` r
+shapiro.test(DB$X16_ha_rain)
+```
+
+    ## 
+    ##  Shapiro-Wilk normality test
+    ## 
+    ## data:  DB$X16_ha_rain
+    ## W = 0.98744, p-value = 0.1582
+
+``` r
+ggqqplot(DB$X17_ha_rain)
+```
+
+![](hazard_result_files/figure-gfm/unnamed-chunk-5-2.png)<!-- -->
+
+``` r
+shapiro.test(DB$X17_ha_rain)
+```
+
+    ## 
+    ##  Shapiro-Wilk normality test
+    ## 
+    ## data:  DB$X17_ha_rain
+    ## W = 0.98613, p-value = 0.1097
+
+``` r
+ggqqplot(DB$X18_ha_rain)
+```
+
+![](hazard_result_files/figure-gfm/unnamed-chunk-5-3.png)<!-- -->
+
+``` r
+shapiro.test(DB$X18_ha_rain)
+```
+
+    ## 
+    ##  Shapiro-Wilk normality test
+    ## 
+    ## data:  DB$X18_ha_rain
+    ## W = 0.98404, p-value = 0.06099
+
 ## 우심피해횟수 자료에 대한 분석
 
 ``` r
@@ -86,7 +143,7 @@ DB_h_p %>%
   geom_density(aes(x=p_damage, y=..density.., color=year))
 ```
 
-![](hazard_result_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+![](hazard_result_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 
 ``` r
 DB_h_p %>% 
@@ -98,7 +155,7 @@ DB_h_p %>%
 
     ## `stat_bin()` using `bins = 30`. Pick better value with `binwidth`.
 
-![](hazard_result_files/figure-gfm/unnamed-chunk-5-2.png)<!-- -->
+![](hazard_result_files/figure-gfm/unnamed-chunk-6-2.png)<!-- -->
 
 ``` r
 DB_h_p %>% 
@@ -109,7 +166,7 @@ DB_h_p %>%
   theme(legend.position = "none")
 ```
 
-![](hazard_result_files/figure-gfm/unnamed-chunk-5-3.png)<!-- -->
+![](hazard_result_files/figure-gfm/unnamed-chunk-6-3.png)<!-- -->
 
 각 시군별 16-18년사이의 확률강우량의 변화를 보면 충청남도 지역의 일부 지역이 변화가 가장 심하다.
 
@@ -123,7 +180,7 @@ DB_h_p %>%
   coord_flip()
 ```
 
-![](hazard_result_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+![](hazard_result_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
 # 확률강우량 정규화(Normalization Function)함수
 
@@ -196,33 +253,13 @@ tm_shape(analysis_simp)+
   tm_facets(nrow=2)
 ```
 
-![](hazard_result_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+![](hazard_result_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
 ``` r
 ###################
 ```
 
 leaflet test
-
-``` r
-library(leaflet)
-library(rgdal)
-```
-
-    ## Loading required package: sp
-
-    ## rgdal: version: 1.4-8, (SVN revision 845)
-    ##  Geospatial Data Abstraction Library extensions to R successfully loaded
-    ##  Loaded GDAL runtime: GDAL 2.2.3, released 2017/11/20
-    ##  Path to GDAL shared files: C:/Users/Kyungtak Kim/Documents/R/win-library/3.6/rgdal/gdal
-    ##  GDAL binary built with GEOS: TRUE 
-    ##  Loaded PROJ.4 runtime: Rel. 4.9.3, 15 August 2016, [PJ_VERSION: 493]
-    ##  Path to PROJ.4 shared files: C:/Users/Kyungtak Kim/Documents/R/win-library/3.6/rgdal/proj
-    ##  Linking to sp version: 1.3-2
-
-``` r
-library(htmltools)
-```
 
 ``` r
 a <- st_transform(analysis_simp, 4326)

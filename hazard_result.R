@@ -14,6 +14,11 @@ library(sf)
 library(tmap)
 Sys.setenv(Language="En")
 library(caret)
+library(leaflet)
+library(rgdal)
+library(htmltools)
+#install.packages("ggpubr")
+library(ggpubr)
 
 
 #' # 원본 데이터 읽기 / 특성 분석  
@@ -52,6 +57,19 @@ DB_h_p %>%
              y=p_rain))+
   geom_boxplot()+
   coord_flip()
+
+
+
+#' 정규성(Normality test)  
+#' ** shapiro-wilk normality test**  
+#' ** p-value가 모두 0.05 보다 크게 나오므로 정규분포를 따른다고 볼 수 있다**
+#' 
+ggqqplot(DB$X16_ha_rain)
+shapiro.test(DB$X16_ha_rain)
+ggqqplot(DB$X17_ha_rain)
+shapiro.test(DB$X17_ha_rain)
+ggqqplot(DB$X18_ha_rain)
+shapiro.test(DB$X18_ha_rain)
 
 
 #' ## 우심피해횟수 자료에 대한 분석  
@@ -139,9 +157,6 @@ tm_shape(analysis_simp)+
 ###################
 #' leaflet test
 #' 
-library(leaflet)
-library(rgdal)
-library(htmltools)
 #+ fig.width=8, fig.height=6
 a <- st_transform(analysis_simp, 4326)
 pal <- colorBin(palette=c("green", "greenyellow", "yellow", "orange", "red"),
