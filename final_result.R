@@ -2,10 +2,7 @@
 #'title: "Qualitative Risk Analysis _ Inha"
 #'author: "Kyungtak Kim"
 #'date: '2020 3 26 '
-#'output:
-#'  html_document:
-#'    keep_md: TRUE
-#'   
+#'output: github_document
 #'    
 #'  
 #'---
