@@ -25,14 +25,18 @@ library(rgdal)
 library(htmltools)
 
 
-#' # 최종 min-max 포함 ---------------------------------------------------------
+
+
+#' # 최종 min-max 미포함 ----------------------------------------------------------  
+
+
 #' # RISK = f(Hazard, Exposure, Vulnerability, Capacity)  
 #' 
 # 원본 데이터 읽기
 hazard <- read.csv('output/hazard_result.csv')
-exposure <- read.csv('output/exposure_result.csv')
-vulnerability <- read.csv('output/vulnerability_result.csv')
-capacity <- read.csv('output/capacity_result.csv')
+exposure <- read.csv('output/exposure_result1.csv')
+vulnerability <- read.csv('output/vulnerability_result1.csv')
+capacity <- read.csv('output/capacity_result1.csv')
 
 
 #데이터 결합
@@ -50,16 +54,13 @@ colnames(result_index_17) <- c("X17_result_index")
 result_index <- cbind(DB[,1:3], c(result_index_16,result_index_17))
 summary(result_index)
 
-# 홍수피해위험지수 표준화 함수 설정
-standard <- function(x){
-  return((x-min(x))/(max(x)-min(x)))
-}
 
-# 연도별 데이터 프레임에 표준화 적용
-result <- as.data.frame(lapply(result_index[,4:5],standard))
+# 연도별 데이터 프레임에 표준화 적용 안함.
+result <- result_index[,4:5]
 colnames(result) <- c("X16_result", "X17_result")
 result <- cbind(DB[,1:3], result)
 head(result, 3)
+summary(result)
 
 
 #' 연도별 확률밀도함수  
@@ -93,7 +94,7 @@ result_p_p %>%
 result_p_p %>% 
   group_by(NameK) %>% 
   mutate(mean=mean(result))%>%   
-  filter(mean < 0.35) %>%            #35% 이하
+  filter(mean < 0.50) %>%            #35% 이하
   ggplot(aes(x=fct_reorder(NameK, mean),
              y=result))+
   geom_boxplot()+
@@ -103,7 +104,7 @@ result_p_p %>%
 result_p_p %>% 
   group_by(NameK) %>% 
   mutate(mean=mean(result))%>%   
-  filter(mean > 0.75) %>%            #75% 이상
+  filter(mean > 0.65) %>%            #75% 이상
   ggplot(aes(x=fct_reorder(NameK, mean),
              y=result))+
   geom_boxplot()+
@@ -142,10 +143,10 @@ hazard_path %>%
   filter(str_detect(NameK, "^강원") ) %>% 
   ggplot(aes(risk, hazard,col=NameK))+
   geom_path(arrow=arrow(angle=10,
-                      ends="last",
-                      type="closed",
-                      length = unit(0.15, "inches")),
-          show.legend = F)+
+                        ends="last",
+                        type="closed",
+                        length = unit(0.15, "inches")),
+            show.legend = F)+
   geom_point(size=2, alpha=0.4, show.legend = F)+
   geom_vline(xintercept = 0.5, alpha=0.3)+
   geom_hline(yintercept = 0.5, alpha=0.3)+
@@ -238,8 +239,6 @@ capacity_path %>%
   scale_x_continuous(limits = c(0,1))+
   scale_y_continuous(limits = c(0,1))
 
-
-
 #' # Mapping      
 #' 시군 shp 파일 불러오기
 analysis <- st_read("input/analysis.shp")
@@ -328,10 +327,11 @@ leaflet(a) %>%
                    overlayGroups = c("Esri", "CartoDB"),
                    options=layersControlOptions(collapsed=FALSE))
 
-#############################
 #' # 결과값 저장  
 #' 
-write.csv(result, 'output/final_result.csv')
+write.csv(result, 'output/final_result1.csv')
+
+
 
 
 # 열 명칭별 의미

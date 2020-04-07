@@ -22,16 +22,16 @@ library(rgdal)
 library(htmltools)
 ```
 
-# 최종 min-max 포함 ———————————————————
+# 최종 min-max 미포함 ———————————————————-
 
 # RISK = f(Hazard, Exposure, Vulnerability, Capacity)
 
 ``` r
 # 원본 데이터 읽기
 hazard <- read.csv('output/hazard_result.csv')
-exposure <- read.csv('output/exposure_result.csv')
-vulnerability <- read.csv('output/vulnerability_result.csv')
-capacity <- read.csv('output/capacity_result.csv')
+exposure <- read.csv('output/exposure_result1.csv')
+vulnerability <- read.csv('output/vulnerability_result1.csv')
+capacity <- read.csv('output/capacity_result1.csv')
 
 
 #데이터 결합
@@ -44,13 +44,13 @@ head(DB, 3)
     ## 2  Gangwon Goseong-gun 강원도 고성군 42820  0.5264574  0.5463284  0.6153013
     ## 3   Gangwon Donghae-si 강원도 동해시 42170  0.6123409  0.6041215  0.5936511
     ##   X16_exposure X17_exposure X16_vulnerability X17_vulnerability X16_capacity
-    ## 1    0.3038772    0.3239064         0.5435461         0.4354101    0.7983780
-    ## 2    0.1938716    0.1884191         0.6601949         0.6438191    0.7478007
-    ## 3    0.3807366    0.3786649         0.3719887         0.3689875    0.7751020
+    ## 1    0.3831819    0.3984708         0.4554924         0.4406811    0.8239609
+    ## 2    0.2857085    0.2779259         0.5397817         0.6225125    0.7889338
+    ## 3    0.4512852    0.4471901         0.3315268         0.3827292    0.8078412
     ##   X17_capacity X18_capacity
-    ## 1    0.8558765    0.8870795
-    ## 2    0.8281501    0.9009704
-    ## 3    0.8444816    0.8442552
+    ## 1    0.8623345    0.8698801
+    ## 2    0.8425940    0.8798479
+    ## 3    0.8542216    0.8391500
 
 ``` r
 summary(DB)
@@ -65,28 +65,28 @@ summary(DB)
     ##  Chungbuk Eumseong-gun:  1   강원도 양구군:  1   Max.   :50000  
     ##  (Other)              :155   (Other)      :155                  
     ##    X16_hazard       X17_hazard       X18_hazard      X16_exposure   
-    ##  Min.   :0.0000   Min.   :0.0000   Min.   :0.0000   Min.   :0.0000  
-    ##  1st Qu.:0.3315   1st Qu.:0.3045   1st Qu.:0.3383   1st Qu.:0.2980  
-    ##  Median :0.4577   Median :0.4459   Median :0.4473   Median :0.3624  
-    ##  Mean   :0.4726   Mean   :0.4633   Mean   :0.4756   Mean   :0.3908  
-    ##  3rd Qu.:0.6327   3rd Qu.:0.6444   3rd Qu.:0.6497   3rd Qu.:0.4641  
+    ##  Min.   :0.0000   Min.   :0.0000   Min.   :0.0000   Min.   :0.1139  
+    ##  1st Qu.:0.3315   1st Qu.:0.3045   1st Qu.:0.3383   1st Qu.:0.3780  
+    ##  Median :0.4577   Median :0.4459   Median :0.4473   Median :0.4350  
+    ##  Mean   :0.4726   Mean   :0.4633   Mean   :0.4756   Mean   :0.4602  
+    ##  3rd Qu.:0.6327   3rd Qu.:0.6444   3rd Qu.:0.6497   3rd Qu.:0.5251  
     ##  Max.   :1.0000   Max.   :1.0000   Max.   :1.0000   Max.   :1.0000  
     ##                                                                     
     ##   X17_exposure    X16_vulnerability X17_vulnerability  X16_capacity   
-    ##  Min.   :0.0000   Min.   :0.0000    Min.   :0.0000    Min.   :0.0000  
-    ##  1st Qu.:0.2917   1st Qu.:0.4964    1st Qu.:0.4605    1st Qu.:0.6876  
-    ##  Median :0.3545   Median :0.6438    Median :0.6247    Median :0.7672  
-    ##  Mean   :0.3871   Mean   :0.6282    Mean   :0.6114    Mean   :0.7428  
-    ##  3rd Qu.:0.4652   3rd Qu.:0.8002    3rd Qu.:0.7778    3rd Qu.:0.8245  
-    ##  Max.   :1.0000   Max.   :1.0000    Max.   :1.0000    Max.   :1.0000  
+    ##  Min.   :0.1103   Min.   :0.06273   Min.   :0.0608    Min.   :0.2710  
+    ##  1st Qu.:0.3699   1st Qu.:0.42145   1st Qu.:0.4626    1st Qu.:0.7473  
+    ##  Median :0.4257   Median :0.52796   Median :0.6058    Median :0.8024  
+    ##  Mean   :0.4547   Mean   :0.51666   Mean   :0.5942    Mean   :0.7855  
+    ##  3rd Qu.:0.5242   3rd Qu.:0.64094   3rd Qu.:0.7394    3rd Qu.:0.8420  
+    ##  Max.   :1.0000   Max.   :0.78532   Max.   :0.9333    Max.   :0.9636  
     ##                                                                       
     ##   X17_capacity     X18_capacity   
-    ##  Min.   :0.0000   Min.   :0.0000  
-    ##  1st Qu.:0.6749   1st Qu.:0.6745  
-    ##  Median :0.7776   Median :0.7814  
-    ##  Mean   :0.7386   Mean   :0.7474  
-    ##  3rd Qu.:0.8445   3rd Qu.:0.8514  
-    ##  Max.   :1.0000   Max.   :1.0000  
+    ##  Min.   :0.2530   Min.   :0.2333  
+    ##  1st Qu.:0.7335   1st Qu.:0.7173  
+    ##  Median :0.8066   Median :0.7941  
+    ##  Mean   :0.7788   Mean   :0.7696  
+    ##  3rd Qu.:0.8542   3rd Qu.:0.8443  
+    ##  Max.   :0.9649   Max.   :0.9509  
     ## 
 
 # RISK 계산
@@ -110,31 +110,47 @@ summary(result_index)
     ##  Chungbuk Eumseong-gun:  1   강원도 양구군:  1   Max.   :50000  
     ##  (Other)              :155   (Other)      :155                  
     ##  X16_result_index X17_result_index
-    ##  Min.   :0.3359   Min.   :0.3304  
-    ##  1st Qu.:0.5177   1st Qu.:0.5147  
-    ##  Median :0.5607   Median :0.5585  
-    ##  Mean   :0.5586   Mean   :0.5501  
-    ##  3rd Qu.:0.5972   3rd Qu.:0.5872  
-    ##  Max.   :0.7378   Max.   :0.6896  
+    ##  Min.   :0.3647   Min.   :0.3680  
+    ##  1st Qu.:0.5234   1st Qu.:0.5421  
+    ##  Median :0.5572   Median :0.5733  
+    ##  Mean   :0.5587   Mean   :0.5728  
+    ##  3rd Qu.:0.5927   3rd Qu.:0.6076  
+    ##  Max.   :0.7314   Max.   :0.7096  
     ## 
 
 ``` r
-# 홍수피해위험지수 표준화 함수 설정
-standard <- function(x){
-  return((x-min(x))/(max(x)-min(x)))
-}
-
-# 연도별 데이터 프레임에 표준화 적용
-result <- as.data.frame(lapply(result_index[,4:5],standard))
+# 연도별 데이터 프레임에 표준화 적용 안함.
+result <- result_index[,4:5]
 colnames(result) <- c("X16_result", "X17_result")
 result <- cbind(DB[,1:3], result)
 head(result, 3)
 ```
 
     ##                   Name         NameK   SGG X16_result X17_result
-    ## 1 Gangwon Gangneung-si 강원도 강릉시 42150  0.8100104  0.9003977
-    ## 2  Gangwon Goseong-gun 강원도 고성군 42820  0.4881184  0.6160862
-    ## 3   Gangwon Donghae-si 강원도 동해시 42170  0.4954857  0.6088050
+    ## 1 Gangwon Gangneung-si 강원도 강릉시 42150  0.6656588  0.6753716
+    ## 2  Gangwon Goseong-gun 강원도 고성군 42820  0.5352204  0.5723402
+    ## 3   Gangwon Donghae-si 강원도 동해시 42170  0.5507485  0.5720656
+
+``` r
+summary(result)
+```
+
+    ##                     Name               NameK          SGG       
+    ##  Busan                :  1   강원도 강릉시:  1   Min.   :11000  
+    ##  Chungbuk Boeun-gun   :  1   강원도 고성군:  1   1st Qu.:42130  
+    ##  Chungbuk Cheongju-si :  1   강원도 동해시:  1   Median :44800  
+    ##  Chungbuk Chungju-si  :  1   강원도 삼척시:  1   Mean   :44074  
+    ##  Chungbuk Danyang-gun :  1   강원도 속초시:  1   3rd Qu.:47130  
+    ##  Chungbuk Eumseong-gun:  1   강원도 양구군:  1   Max.   :50000  
+    ##  (Other)              :155   (Other)      :155                  
+    ##    X16_result       X17_result    
+    ##  Min.   :0.3647   Min.   :0.3680  
+    ##  1st Qu.:0.5234   1st Qu.:0.5421  
+    ##  Median :0.5572   Median :0.5733  
+    ##  Mean   :0.5587   Mean   :0.5728  
+    ##  3rd Qu.:0.5927   3rd Qu.:0.6076  
+    ##  Max.   :0.7314   Max.   :0.7096  
+    ## 
 
 연도별 확률밀도함수
 
@@ -145,9 +161,9 @@ head(result_p, 3)
 ```
 
     ##           NameK   SGG X16_result X17_result
-    ## 1 강원도 강릉시 42150  0.8100104  0.9003977
-    ## 2 강원도 고성군 42820  0.4881184  0.6160862
-    ## 3 강원도 동해시 42170  0.4954857  0.6088050
+    ## 1 강원도 강릉시 42150  0.6656588  0.6753716
+    ## 2 강원도 고성군 42820  0.5352204  0.5723402
+    ## 3 강원도 동해시 42170  0.5507485  0.5720656
 
 ``` r
 result_p_p <- result_p %>%                           # pivoting
@@ -159,7 +175,7 @@ result_p_p %>%
   geom_density(aes(x=result, y=..density.., color=year))
 ```
 
-![](final_result_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
+![](final_result_1_files/figure-gfm/unnamed-chunk-4-1.png)<!-- -->
 
 ``` r
 result_p %>% 
@@ -167,7 +183,7 @@ result_p %>%
   geom_histogram(bins=100)
 ```
 
-![](final_result_files/figure-gfm/unnamed-chunk-4-2.png)<!-- -->
+![](final_result_1_files/figure-gfm/unnamed-chunk-4-2.png)<!-- -->
 
 ``` r
 result_p_p %>% 
@@ -179,33 +195,33 @@ result_p_p %>%
   coord_flip()
 ```
 
-![](final_result_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
+![](final_result_1_files/figure-gfm/unnamed-chunk-5-1.png)<!-- -->
 
 ``` r
 result_p_p %>% 
   group_by(NameK) %>% 
   mutate(mean=mean(result))%>%   
-  filter(mean < 0.35) %>%            #35% 이하
+  filter(mean < 0.50) %>%            #35% 이하
   ggplot(aes(x=fct_reorder(NameK, mean),
              y=result))+
   geom_boxplot()+
   coord_flip()
 ```
 
-![](final_result_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
+![](final_result_1_files/figure-gfm/unnamed-chunk-6-1.png)<!-- -->
 
 ``` r
 result_p_p %>% 
   group_by(NameK) %>% 
   mutate(mean=mean(result))%>%   
-  filter(mean > 0.75) %>%            #75% 이상
+  filter(mean > 0.65) %>%            #75% 이상
   ggplot(aes(x=fct_reorder(NameK, mean),
              y=result))+
   geom_boxplot()+
   coord_flip()
 ```
 
-![](final_result_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
+![](final_result_1_files/figure-gfm/unnamed-chunk-7-1.png)<!-- -->
 
 ``` r
 result_p %>% 
@@ -213,8 +229,8 @@ result_p %>%
   filter(NameK == "서울특별시")
 ```
 
-    ##        NameK   SGG X16_result X17_result        dif
-    ## 1 서울특별시 11000  0.7166389  0.7321177 0.01547886
+    ##        NameK   SGG X16_result X17_result          dif
+    ## 1 서울특별시 11000  0.6643211  0.6544628 -0.009858286
 
 ``` r
 result_p_dif <- result_p%>%
@@ -225,16 +241,16 @@ knitr::kable(result_p_dif[1:10, ])  # 침수구역내 총인구가 늘어난 시
 
 | NameK    |   SGG | X16\_result | X17\_result |       dif |
 | :------- | ----: | ----------: | ----------: | --------: |
-| 강원도 양양군  | 42830 |   0.6178257 |   0.7966093 | 0.1787836 |
-| 경상남도 함안군 | 48730 |   0.4164833 |   0.5869667 | 0.1704833 |
-| 강원도 평창군  | 42760 |   0.7611326 |   0.9193971 | 0.1582644 |
-| 강원도 춘천시  | 42110 |   0.5502588 |   0.7025579 | 0.1522991 |
-| 경상북도 영양군 | 47760 |   0.5093570 |   0.6605020 | 0.1511450 |
-| 경상북도 군위군 | 47720 |   0.4829632 |   0.6289233 | 0.1459600 |
-| 강원도 영월군  | 42750 |   0.4185902 |   0.5598876 | 0.1412974 |
-| 경상북도 의성군 | 47730 |   0.4869166 |   0.6280056 | 0.1410890 |
-| 강원도 고성군  | 42820 |   0.4881184 |   0.6160862 | 0.1279678 |
-| 강원도 횡성군  | 42730 |   0.3402637 |   0.4658988 | 0.1256351 |
+| 경상북도 의성군 | 47730 |   0.5051737 |   0.5659529 | 0.0607792 |
+| 경상북도 군위군 | 47720 |   0.5068604 |   0.5629650 | 0.0561046 |
+| 경상북도 영양군 | 47760 |   0.5241817 |   0.5741851 | 0.0500034 |
+| 강원도 양양군  | 42830 |   0.5887911 |   0.6337451 | 0.0449539 |
+| 경상남도 함안군 | 48730 |   0.5180657 |   0.5609636 | 0.0428978 |
+| 전라북도 김제시 | 45210 |   0.5571666 |   0.5966482 | 0.0394817 |
+| 전라북도 무주군 | 45730 |   0.5355678 |   0.5747079 | 0.0391401 |
+| 강원도 영월군  | 42750 |   0.5140177 |   0.5512494 | 0.0372317 |
+| 강원도 고성군  | 42820 |   0.5352204 |   0.5723402 | 0.0371198 |
+| 경상북도 청송군 | 47750 |   0.4742046 |   0.5112493 | 0.0370447 |
 
 ``` r
 knitr::kable(result_p_dif[152:161, ])  # 침수구역내 총인구가 줄어든 시군
@@ -242,16 +258,16 @@ knitr::kable(result_p_dif[152:161, ])  # 침수구역내 총인구가 줄어든 
 
 |     | NameK    |   SGG | X16\_result | X17\_result |         dif |
 | --- | :------- | ----: | ----------: | ----------: | ----------: |
-| 152 | 경기도 안산시  | 41270 |   0.4316604 |   0.4016536 | \-0.0300069 |
-| 153 | 충청남도 청양군 | 44790 |   0.7362989 |   0.7017132 | \-0.0345857 |
-| 154 | 경기도 연천군  | 41800 |   0.6509595 |   0.6125975 | \-0.0383620 |
-| 155 | 경기도 부천시  | 41190 |   0.4278185 |   0.3781803 | \-0.0496382 |
-| 156 | 충청남도 부여군 | 44760 |   0.7773486 |   0.7275116 | \-0.0498370 |
-| 157 | 인천광역시    | 28000 |   0.5263018 |   0.4756885 | \-0.0506133 |
-| 158 | 경기도 시흥시  | 41390 |   0.2061888 |   0.1555098 | \-0.0506790 |
-| 159 | 충청북도 청주시 | 43110 |   0.3649189 |   0.3043571 | \-0.0605618 |
-| 160 | 경기도 고양시  | 41280 |   0.7098045 |   0.6421808 | \-0.0676237 |
-| 161 | 충청북도 증평군 | 43745 |   0.3408069 |   0.2562014 | \-0.0846056 |
+| 152 | 충청남도 청양군 | 44790 |   0.6083092 |   0.5883044 | \-0.0200048 |
+| 153 | 경기도 안산시  | 41270 |   0.5360644 |   0.5158596 | \-0.0202047 |
+| 154 | 경기도 광명시  | 41210 |   0.7314263 |   0.7096085 | \-0.0218178 |
+| 155 | 경기도 구리시  | 41310 |   0.6625731 |   0.6389009 | \-0.0236722 |
+| 156 | 충청북도 증평군 | 43745 |   0.4773235 |   0.4517235 | \-0.0256000 |
+| 157 | 인천광역시    | 28000 |   0.5826775 |   0.5552402 | \-0.0274373 |
+| 158 | 경기도 부천시  | 41190 |   0.5446228 |   0.5165721 | \-0.0280507 |
+| 159 | 충청남도 부여군 | 44760 |   0.6264178 |   0.5982938 | \-0.0281239 |
+| 160 | 경기도 시흥시  | 41390 |   0.4693302 |   0.4386111 | \-0.0307191 |
+| 161 | 경기도 고양시  | 41280 |   0.6448897 |   0.6076294 | \-0.0372603 |
 
 ``` r
 result_p_p %>% 
@@ -262,7 +278,7 @@ result_p_p %>%
   theme(legend.position = "none")
 ```
 
-![](final_result_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
+![](final_result_1_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
 # RISK \~ f(Hazard, Exposure, VUlnerability, Capacity) 분석
 
@@ -280,10 +296,10 @@ hazard_path %>%
   filter(str_detect(NameK, "^강원") ) %>% 
   ggplot(aes(risk, hazard,col=NameK))+
   geom_path(arrow=arrow(angle=10,
-                      ends="last",
-                      type="closed",
-                      length = unit(0.15, "inches")),
-          show.legend = F)+
+                        ends="last",
+                        type="closed",
+                        length = unit(0.15, "inches")),
+            show.legend = F)+
   geom_point(size=2, alpha=0.4, show.legend = F)+
   geom_vline(xintercept = 0.5, alpha=0.3)+
   geom_hline(yintercept = 0.5, alpha=0.3)+
@@ -296,7 +312,7 @@ hazard_path %>%
   scale_y_continuous(limits = c(0,1))
 ```
 
-![](final_result_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+![](final_result_1_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
 
 ## RISK \~ Exposure
 
@@ -326,7 +342,7 @@ exposure_path %>%
   scale_y_continuous(limits = c(0,1))
 ```
 
-![](final_result_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+![](final_result_1_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
 
 ## RISK \~ Vulnerability
 
@@ -356,7 +372,7 @@ vulnerability_path %>%
   scale_y_continuous(limits = c(0,1))
 ```
 
-![](final_result_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+![](final_result_1_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
 
 ## RISK \~ Capacity
 
@@ -386,7 +402,7 @@ capacity_path %>%
   scale_y_continuous(limits = c(0,1))
 ```
 
-![](final_result_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+![](final_result_1_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
 
 # Mapping
 
@@ -457,7 +473,7 @@ tm_shape(analysis_simp)+
                position = c("left", "bottom"))
 ```
 
-![](final_result_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
+![](final_result_1_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 
 ``` r
 ######################
@@ -517,16 +533,14 @@ leaflet(a) %>%
                    options=layersControlOptions(collapsed=FALSE))
 ```
 
-![](final_result_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
-
-``` r
-#############################
-```
+![](final_result_1_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
 
 # 결과값 저장
 
 ``` r
-write.csv(result, 'output/final_result.csv')
+write.csv(result, 'output/final_result1.csv')
+
+
 
 
 # 열 명칭별 의미
