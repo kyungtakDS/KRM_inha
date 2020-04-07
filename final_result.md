@@ -205,10 +205,135 @@ result_p_p %>%
 
 ![](final_result_files/figure-gfm/unnamed-chunk-8-1.png)<!-- -->
 
-# Mapping
+# RISK \~ f(Hazard, Exposure, VUlnerability, Capacity) 분석
+
+## RISK \~ Hazard
 
 ``` r
-# 시군 shp 파일 불러오기
+result_p <- result %>% 
+  pivot_longer(c("X16_result","X17_result"), names_to = "year", values_to = "risk")
+hazard_p <- hazard %>% 
+  pivot_longer(c("X16_hazard", "X17_hazard"), names_to = "year", values_to = "hazard")
+hazard_path <- cbind(result_p, hazard_p[,6])
+
+hazard_path %>% 
+  group_by(NameK) %>% 
+  filter(str_detect(NameK, "^강원") ) %>% 
+  ggplot(aes(risk, hazard,col=NameK))+
+  geom_path(arrow=arrow(angle=10,
+                      ends="last",
+                      type="closed",
+                      length = unit(0.15, "inches")),
+          show.legend = F)+
+  geom_point(size=2, alpha=0.4, show.legend = F)+
+  geom_vline(xintercept = 0.5, alpha=0.3)+
+  geom_hline(yintercept = 0.5, alpha=0.3)+
+  labs(x="RISK", y="Hazard")+
+  directlabels::geom_dl(aes(label=NameK),
+                        method = list("first.points",rot=45), 
+                        position = "identity",
+                        alpha=0.3)+
+  scale_x_continuous(limits = c(0,1))+
+  scale_y_continuous(limits = c(0,1))
+```
+
+![](final_result_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+
+## RISK \~ Exposure
+
+``` r
+exposure_p <- exposure %>% 
+  pivot_longer(c("X16_exposure", "X17_exposure"), names_to = "year", values_to = "exposure")
+exposure_path <- cbind(result_p, exposure_p[,5])
+
+exposure_path %>% 
+  group_by(NameK) %>% 
+  filter(str_detect(NameK, "^강원") ) %>% 
+  ggplot(aes(risk, exposure,col=NameK))+
+  geom_path(arrow=arrow(angle=10,
+                        ends="last",
+                        type="closed",
+                        length = unit(0.15, "inches")),
+            show.legend = F)+
+  geom_point(size=2, alpha=0.4, show.legend = F)+
+  geom_vline(xintercept = 0.5, alpha=0.3)+
+  geom_hline(yintercept = 0.5, alpha=0.3)+
+  labs(x="RISK", y="Exposure")+
+  directlabels::geom_dl(aes(label=NameK),
+                        method = list("first.points",rot=45), 
+                        position = "identity",
+                        alpha=0.3)+
+  scale_x_continuous(limits = c(0,1))+
+  scale_y_continuous(limits = c(0,1))
+```
+
+![](final_result_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+
+## RISK \~ Vulnerability
+
+``` r
+vulnerability_p <- vulnerability %>% 
+  pivot_longer(c("X16_vulnerability", "X17_vulnerability"), names_to = "year", values_to = "vulnerability")
+vulnerability_path <- cbind(result_p, vulnerability_p[,5])
+
+vulnerability_path %>% 
+  group_by(NameK) %>% 
+  filter(str_detect(NameK, "^강원") ) %>% 
+  ggplot(aes(risk, vulnerability,col=NameK))+
+  geom_path(arrow=arrow(angle=10,
+                        ends="last",
+                        type="closed",
+                        length = unit(0.15, "inches")),
+            show.legend = F)+
+  geom_point(size=2, alpha=0.4, show.legend = F)+
+  geom_vline(xintercept = 0.5, alpha=0.3)+
+  geom_hline(yintercept = 0.5, alpha=0.3)+
+  labs(x="RISK", y="Vulnerability")+
+  directlabels::geom_dl(aes(label=NameK),
+                        method = list("first.points",rot=45), 
+                        position = "identity",
+                        alpha=0.3)+
+  scale_x_continuous(limits = c(0,1))+
+  scale_y_continuous(limits = c(0,1))
+```
+
+![](final_result_files/figure-gfm/unnamed-chunk-11-1.png)<!-- -->
+
+## RISK \~ Capacity
+
+``` r
+capacity_p <- capacity %>% 
+  pivot_longer(c("X16_capacity", "X17_capacity"), names_to = "year", values_to = "capacity")
+capacity_path <- cbind(result_p, capacity_p[,6])
+
+capacity_path %>% 
+  group_by(NameK) %>% 
+  filter(str_detect(NameK, "^강원") ) %>% 
+  ggplot(aes(risk, capacity, col=NameK))+
+  geom_path(arrow=arrow(angle=10,
+                        ends="last",
+                        type="closed",
+                        length = unit(0.15, "inches")),
+            show.legend = F)+
+  geom_point(size=2, alpha=0.4, show.legend = F)+
+  geom_vline(xintercept = 0.5, alpha=0.3)+
+  geom_hline(yintercept = 0.5, alpha=0.3)+
+  labs(x="RISK", y="Capacity")+
+  directlabels::geom_dl(aes(label=NameK),
+                        method = list("first.points",rot=45), 
+                        position = "identity",
+                        alpha=0.3)+
+  scale_x_continuous(limits = c(0,1))+
+  scale_y_continuous(limits = c(0,1))
+```
+
+![](final_result_files/figure-gfm/unnamed-chunk-12-1.png)<!-- -->
+
+# Mapping
+
+시군 shp 파일 불러오기
+
+``` r
 analysis <- st_read("input/analysis.shp")
 ```
 
@@ -273,7 +398,7 @@ tm_shape(analysis_simp)+
                position = c("left", "bottom"))
 ```
 
-![](final_result_files/figure-gfm/unnamed-chunk-9-1.png)<!-- -->
+![](final_result_files/figure-gfm/unnamed-chunk-13-1.png)<!-- -->
 
 ``` r
 ######################
@@ -333,7 +458,7 @@ leaflet(a) %>%
                    options=layersControlOptions(collapsed=FALSE))
 ```
 
-![](final_result_files/figure-gfm/unnamed-chunk-10-1.png)<!-- -->
+![](final_result_files/figure-gfm/unnamed-chunk-14-1.png)<!-- -->
 
 ``` r
 #############################
