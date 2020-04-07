@@ -404,6 +404,147 @@ summary(capacity$X16_cap_index)
 summary(capacity$X17_cap_index)
 summary(capacity$X18_cap_index)
 
+
+
+
+
+
+
+#' # 최종 min-max 미포함 ---------------------------------------------------------  
+
+
+result_final <-capacity[,13:15]  
+head(result_final,3)
+
+standard_reverse <- function(x){
+  return(1-x)
+}
+
+# 연도별 Capacity 지수 (반전) 산정
+result_final <- as.data.frame(lapply(result_final[,1:3],standard_reverse))
+colnames(result_final) <- c("X16_capacity", "X17_capacity", "X18_capacity")
+result_final <- cbind(DB[,1:3], result_final)
+head(result_final,3)
+summary(result_final)
+
+
+
+#' # Mapping  
+#' 
+# 시군 shp 파일 불러오기
+analysis <- st_read("input/analysis.shp")
+
+# 폴리곤 에러 체크(기존 shp 파일을 에러 수정한 파일로 변경하였음)
+#st_is_valid(analysis)
+#library(lwgeom)
+#analysis <- st_make_valid(analysis)
+st_is_valid(analysis)
+
+# shp파일에 연도별 Capacity 지수(표준화 적용) 추가
+analysis <- right_join(analysis, result_final[,3:6])
+
+# 폴리곤 단순화
+analysis_simp <- st_simplify(analysis, dTolerance = 50)
+
+#+ fig.width=12, fig.height=6
+# 결과 확인
+tmap_mode("plot")
+breaks = c(0, 0.2, 0.4, 0.6, 0.8, 1)
+facets=c("X16_capacity", "X17_capacity", "X18_capacity")
+tm_shape(analysis_simp)+
+  tm_polygons(facets,
+              breaks=breaks,
+              palette = c("green", "greenyellow", "yellow", "orange", "red"),
+              legend.reverse = TRUE)+
+  tm_facets(ncol = 3)+
+  tm_layout(legend.position = c("right", "bottom"))+
+  tm_compass(type = "rose",
+             position = c("right", "top"),
+             size = 1.5)+
+  tm_scale_bar(breaks = c(0, 25, 50, 100, 150, 200),
+               position = c("left", "bottom"))
+
+
+###################
+#' leaflet test
+#' 
+#+ fig.width=8, fig.height=6
+a <- st_transform(analysis_simp, 4326)
+pal <- colorBin(palette=c("green", "greenyellow", "yellow", "orange", "red"),
+                domain=NULL,
+                bins = c(0, .2, .4, .6, 0.8, 1),
+                pretty = FALSE)
+
+leaflet(a) %>% 
+  setView(lng = 128, lat = 35.9, zoom = 7) %>% 
+  # base groups
+  addPolygons(color = ~pal(X16_capacity),
+              weight = 1,
+              smoothFactor = 0.5,
+              opacity = 1.0,
+              fillOpacity = 0.5,
+              label = ~htmlEscape(NameK),
+              popup = ~htmlEscape(X16_capacity),
+              highlightOptions = highlightOptions(color = "white",
+                                                  weight = 2,
+                                                  bringToFront = TRUE),
+              group="capacity 2016") %>% 
+  addPolygons(color = ~pal(X17_capacity),
+              weight = 1,
+              smoothFactor = 0.5,
+              opacity = 1.0,
+              fillOpacity = 0.5,
+              label = ~htmlEscape(NameK),
+              popup = ~htmlEscape(X17_capacity),
+              highlightOptions = highlightOptions(color = "white",
+                                                  weight = 2,
+                                                  bringToFront = TRUE),
+              group="capacity 2017") %>%
+  addPolygons(color = ~pal(X18_capacity),
+              weight = 1,
+              smoothFactor = 0.5,
+              opacity = 1.0,
+              fillOpacity = 0.5,
+              label = ~htmlEscape(NameK),
+              popup = ~htmlEscape(X18_capacity),
+              highlightOptions = highlightOptions(color = "white",
+                                                  weight = 2,
+                                                  bringToFront = TRUE),
+              group="capacity 2018") %>%
+  # overlay groups
+  addProviderTiles(providers$Esri.WorldStreetMap,
+                   group="Esri") %>%  #CartoDB.Positron
+  addProviderTiles(providers$CartoDB.Positron,
+                   group="CartoDB") %>%  
+  addLegend("bottomright",
+            pal = pal,
+            values = ~X16_capacity,
+            title = "Capacity Index",
+            labFormat = labelFormat(digits=10),
+            opacity = 1) %>% 
+  hideGroup("CartoDB") %>% 
+  #Layer controls
+  addLayersControl(baseGroups = c("capacity 2016", "capacity 2017", "capacity 2018"),
+                   overlayGroups = c("Esri", "CartoDB"),
+                   options=layersControlOptions(collapsed=FALSE))
+
+#'
+# 결과값 저장
+write.csv(result_final,'output/capacity_result1.csv', row.names = F)
+
+
+
+
+
+
+
+
+
+
+#' # 최종 min-max 포함 ---------------------------------------------------------  
+
+
+
 #' ## 각각의 요소별로 합하고/나누었으므로 다시 0~1사이로 rescaling  
 #' 
 # Capacity 지수 표준화 함수 및 반전 함수 설정
@@ -421,7 +562,7 @@ standard_reverse <- function(x){
 # 연도별 Capacity 지수 표준화(반전) 산정
 result_final <- as.data.frame(lapply(capacity[,13:15],standard))  
 head(result_final,3)
-
+summary(result_final)
   
 #' 연도별 확률밀도함수  
 #'    
@@ -475,7 +616,6 @@ result_p_p %>%
   geom_point(aes(color=factor(SGG)))+
   facet_grid(. ~year)+
   theme(legend.position = "none")
-
 
 #' ## (1-x)로 반전한 후의 자료 특성 분석  
 #' **(1-x) 이후 Capacity 지수의 특성 분석**
