@@ -644,6 +644,8 @@ summary(capacity$X18_cap_index)
     ##    Min. 1st Qu.  Median    Mean 3rd Qu.    Max. 
     ## 0.04909 0.15573 0.20594 0.23037 0.28269 0.76668
 
+# 최종 min-max 포함 ———————————————————
+
 ## 각각의 요소별로 합하고/나누었으므로 다시 0\~1사이로 rescaling
 
 ``` r

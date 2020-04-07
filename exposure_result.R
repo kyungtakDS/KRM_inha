@@ -281,6 +281,191 @@ colnames(ex_index_17) <- c("X17_ex_index")
 exposure <- cbind(exposure, c(ex_index_16,ex_index_17))
 
 
+
+
+
+
+
+
+
+#' # 최종 min-max 미포함 ----------------------------------------------------------  
+
+# 연도별 Exposure 지수 산정
+result <- exposure[,10:11]
+colnames(result) <- c("X16_exposure", "X17_exposure")
+result <- cbind(DB[,1:3], result)
+head(result,3)
+summary(result)
+   
+#'   
+result_p_p <- result %>%                           # pivoting
+  pivot_longer(c("X16_exposure", "X17_exposure"),
+               names_to = "year",
+               values_to = "exposure")
+result_p_p %>% 
+  ggplot()+
+  geom_density(aes(x=exposure, y=..density.., color=year))
+result %>% 
+  ggplot(aes(X17_exposure))+
+  geom_histogram(bins=100)
+
+#' 
+#+ fig.width=12, fig.height=25
+result_p_p %>% 
+  group_by(NameK) %>% 
+  mutate(mean=mean(exposure))%>% 
+  ggplot(aes(x=fct_reorder(NameK, mean),
+             y=exposure))+
+  geom_boxplot()+
+  coord_flip()
+
+#' 
+#+  fig.width=6, fig.height=6
+result_p_p %>% 
+  group_by(NameK) %>% 
+  mutate(mean=mean(exposure))%>%   
+  filter(mean < 0.25) %>% 
+  ggplot(aes(x=fct_reorder(NameK, mean),
+             y=exposure))+
+  geom_boxplot()+
+  coord_flip()
+
+#' 
+result_p_p %>% 
+  group_by(NameK) %>% 
+  mutate(mean=mean(exposure))%>%   
+  filter(mean > 0.75) %>% 
+  ggplot(aes(x=fct_reorder(NameK, mean),
+             y=exposure))+
+  geom_boxplot()+
+  coord_flip()
+
+#' 
+result %>% 
+  mutate(dif=(X17_exposure - X16_exposure)) %>% 
+  filter(NameK == "서울특별시")
+result_p_dif <- result%>%
+  mutate(dif=(X17_exposure - X16_exposure)) %>% 
+  arrange(-dif)
+knitr::kable(result_p_dif[1:10, ])  
+knitr::kable(result_p_dif[152:161, ]) 
+
+result_p_p %>% 
+  group_by(year) %>% 
+  ggplot(aes(exposure, SGG))+
+  geom_point(aes(color=factor(SGG)))+
+  facet_grid(. ~year)+
+  theme(legend.position = "none")
+
+
+#' # Mapping  
+#' 
+# 시군 shp 파일 불러오기
+library(sf)
+analysis <- st_read("input/analysis.shp")
+
+# 폴리곤 에러 체크(기본 파일을 에러 수정한 파일로 변경하였음)
+#st_is_valid(analysis)
+#library(lwgeom)
+#analysis <- st_make_valid(analysis)
+st_is_valid(analysis)
+
+# shp파일에 연도별 Exposure 지수(표준화 적용) 추가
+library(dplyr)
+analysis <- right_join(analysis, result[,3:5])
+
+# 폴리곤 단순화
+library(tmap)
+analysis_simp <- st_simplify(analysis, dTolerance = 50)
+
+#+ fig.width=12, fig.height=6
+# 결과 확인
+tmap_mode("plot")
+breaks = c(0, 0.2, 0.4, 0.6, 0.8, 1)
+facets=c("X16_exposure", "X17_exposure")
+tm_shape(analysis_simp)+
+  tm_polygons(facets,
+              breaks=breaks,
+              palette = c("green", "greenyellow", "yellow", "orange", "red"),
+              legend.reverse = TRUE)+
+  tm_facets(ncol = 2)+
+  tm_layout(legend.position = c("right", "bottom"))+
+  tm_compass(type = "rose",
+             position = c("right", "top"),
+             size = 2.5)+
+  tm_scale_bar(breaks = c(0, 25, 50, 100, 150, 200),
+               position = c("left", "bottom"))
+
+######################
+#library(leaflet)
+#library(rgdal)
+#library(htmltools)
+#+ fig.width=8, fig.height=6
+a <- st_transform(analysis_simp, 4326)
+pal <- colorBin(
+  palette=c("green", "greenyellow", "yellow", "orange", "red"),
+  domain=NULL,
+  bins = c(0, .2, .4, .6, 0.8, 1),
+  pretty = FALSE)
+
+leaflet(a) %>% 
+  setView(lng = 128, lat = 35.9, zoom = 7) %>% 
+  # base groups
+  addPolygons(color = ~pal(X16_exposure),
+              weight = 1,
+              smoothFactor = 0.5,
+              opacity = 1.0,
+              fillOpacity = 0.5,
+              label = ~htmlEscape(NameK),
+              popup = ~htmlEscape(X16_exposure),
+              highlightOptions = highlightOptions(color = "white",
+                                                  weight = 2,
+                                                  bringToFront = TRUE),
+              group="Exposure 2016") %>% 
+  addPolygons(color = ~pal(X17_exposure),
+              weight = 1,
+              smoothFactor = 0.5,
+              opacity = 1.0,
+              fillOpacity = 0.5,
+              label = ~htmlEscape(NameK),
+              popup = ~htmlEscape(X17_exposure),
+              highlightOptions = highlightOptions(color = "white",
+                                                  weight = 2,
+                                                  bringToFront = TRUE),
+              group="Exposure 2017") %>% 
+  #overlay groups
+  addProviderTiles(providers$Esri.WorldStreetMap,
+                   group="Esri") %>%  
+  addProviderTiles(providers$CartoDB.Positron,
+                   group="CartoDB") %>%  
+  addLegend("bottomright",
+            pal = pal,
+            values = ~X17_exposure,
+            title = "Exposure Index",
+            labFormat = labelFormat(digits=10),
+            opacity = 1) %>% 
+  hideGroup("CartoDB") %>% 
+  #Layer controls
+  addLayersControl(baseGroups = c("Exposure 2016", "Exposure 2017"),
+                   overlayGroups = c("Esri", "CartoDB"),
+                   options=layersControlOptions(collapsed=FALSE))
+
+#' # 결과값 저장  
+#' 
+write.csv(result, 'output/exposure_result1.csv', row.names = F)
+
+
+
+
+
+
+
+
+
+
+
+#' # 최종 min-max 포함 -----------------------------------------------------------  
+
 #' ## 년도별 Expsoure 지수를 다시 min-max scaling 적용  
 #' Exposure 지수 표준화 함수 설정
 #' 

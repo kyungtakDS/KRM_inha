@@ -59,7 +59,6 @@ DB_h_p %>%
   coord_flip()
 
 
-
 #' 정규성(Normality test)  
 #' ** shapiro-wilk normality test**  
 #' ** p-value가 모두 0.05 보다 크게 나오므로 정규분포를 따른다고 볼 수 있다**
@@ -106,6 +105,8 @@ DB_h_p %>%
   geom_boxplot()+
   coord_flip()
 
+
+# 최종 min-max 포함 -----------------------------------------------------------
 
 #' # 확률강우량 정규화(Normalization Function)함수  
 #' ## [주] 위 우심피해횟수는 일단 사용하지 않는다.  

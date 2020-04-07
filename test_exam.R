@@ -208,6 +208,38 @@ mod2
 
 
 
+##########################################################
+#' # Modeling  
+#' **지자체별 Risk~f(Hazard, Exposure, Vulerability, Capacity)**
+#'    
+#
+library(modelr)
+risk_path <- cbind(hazard_path, exposure_path[,5], vulnerability_path[,5], capacity_path[,5])
+colnames(risk_path)[7:9] <- c("exposure", "vulnerability","capacity")
+risk_path$year[risk_path$year=="X16_result"] <- c(2016)
+risk_path$year[risk_path$year=="X17_result"] <- c(2017)
+risk_path$year <- as.integer(risk_path$year)
+str(risk_path)
+head(risk_path,3)
+summary(risk_path)
+mod1 <- lm(risk ~ hazard + exposure + vulnerability + capacity, data=risk_path)
+mod2 <- lm(risk ~ hazard * exposure * vulnerability * capacity, data=risk_path)
+grid <- risk_path %>% 
+  data_grid(
+    hazard=seq_range(hazard, 5),
+    exposure=seq_range(exposure, 5),
+    vulnerability=seq_range(vulnerability, 5),
+    capacity=seq_range(capacity, 5)
+  ) %>% 
+  gather_predictions(mod1, mod2)
+grid
+grid %>% 
+  ggplot(aes(hazard, exposure))+
+  geom_tile(aes(fill=pred))+
+  facet_wrap(~model)
+
+
+###########################################################################
 
 
 
